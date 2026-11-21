@@ -1,4 +1,4 @@
-# FingerMemory 实施路线
+# Fingertip Memory 实施路线
 
 更新：2026-11-16。本文件仅保存长期路线、依赖与验收标准，不保存逐轮过程、截图、机器状态、完整测试输出或会话交接。实际执行状态和当前阻塞放在 Git 忽略的 `.local/handoffs/current.md`；代码变更历史以 Git 提交为准。
 

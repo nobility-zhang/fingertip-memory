@@ -66,7 +66,7 @@ Flyway V14 为 `fm_user_data`、战斗/冒险 run 和关键命令回执增加 `d
 
 ## API 与认证边界
 
-- 唯一 API 契约是 `docs/api/openapi.yaml`；当前 P2 实现 auth、lexicons、words、queue、sessions、formal reviews、migration 和 account backup，其余路径明确标记 planned。
+- 唯一 API 契约是 `docs/api/openapi.yaml`；当前服务实现 auth/PAT、lexicons、words、queue、sessions、formal reviews、migration、account backup、content packages、adventures 和 battles，其余扩展接口明确标记 planned。
 - Web 同源使用 HttpOnly `FM_SESSION`、SameSite=Lax、CSRF header；不得把会话令牌存 localStorage。
 - CLI 使用 Bearer 个人访问令牌；V15 只保存 SHA-256 摘要，支持过期、撤销和最后使用时间。
   仅已验证 PAT 请求豁免 CSRF；带伪 Bearer 的 Cookie 请求不会回退到浏览器会话。
@@ -149,6 +149,6 @@ P0 核查结论详见 `docs/architecture/fsrs.md`：当前没有通过 FSRS-7/34
 
 ## GM 角色与数据权限
 
-角色授权是待实施扩展：普通注册只能创建 USER；管理员初始化/授予是独立可信操作，不能通过 username=admin 或客户端 role 字段获得权限。GM 浏览器接口仅接受已认证、仍有效的 ADMIN Cookie 会话并校验 CSRF，普通 PAT 不授予 GM 能力。检查实际认证方式，不能因为请求随便带一个 Bearer 前缀就免除 GM 的 CSRF。
+角色授权已实现：普通注册只能创建 USER；管理员初始化/授予是独立可信操作，不能通过 username=admin 或客户端 role 字段获得权限。GM 浏览器接口仅接受已认证、仍有效的 ADMIN Cookie 会话并校验 CSRF，普通 PAT 不授予 GM 能力。检查实际认证方式，不能因为请求随便带一个 Bearer 前缀就免除 GM 的 CSRF。
 
 GM 可管理账号状态和共享内容，但普通学习/备份 API 的 owner 规则不变；默认不能浏览其他正常用户的私人答案、笔记和备份。跳关、发牌、改变时钟/复习状态仅在独立 sandbox 执行。管理审计写服务端数据库，不是需要提交 Git 的开发日志。详见 [GM 管理](../operations/gm.md)。

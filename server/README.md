@@ -1,4 +1,4 @@
-# FingerMemory Server
+# Fingertip Memory Server
 
 Spring Boot 4.1.2、Java 21、MyBatis、MySQL 8.4 和 Spring Session JDBC 构成的多用户 API。Web 生产构建与 API 在同一镜像和同源端口提供；正式复习调用 Compose 内网的固定版本 FSRS-7 worker。
 
