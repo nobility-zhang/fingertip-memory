@@ -1,4 +1,4 @@
-# FingerMemory
+# Fingertip Memory
 
 面向个人及少量用户的英语学习应用。当前提供本地词库与备份、FSRS 复习、多用户在线学习、
 旅店与伙伴、经典闪卡、Phaser/Vue 卡牌冒险，以及内容包续章和结局续作。功能目标与
@@ -63,8 +63,8 @@ npm run build
 
 静态产物在 `web/dist`。本地学习能力可以静态发布；账号功能仍需同源后端。服务端和跨客户端验证入口见服务端说明及 `web/package.json`。
 
-CLI 在独立仓库 [FingerMemory](https://github.com/nobility-zhang/FingerMemory) 构建和测试。
-账号页可直接创建一次性明文 CLI 令牌；令牌管理与使用说明见该仓库 README。
+CLI 位于 [cli/](cli/README.md)，随本仓库构建和测试。
+账号页可直接创建一次性明文 CLI 令牌；令牌管理与使用说明见 CLI README。
 
 ## 数据与文档
 
@@ -74,5 +74,6 @@ CLI 在独立仓库 [FingerMemory](https://github.com/nobility-zhang/FingerMemor
 - [开发规范](docs/development/README.md)：职责拆分、可读代码、验证与分段提交。
 - [资源管理](docs/development/assets.md)：成品素材、来源、Git LFS 与过程产物隔离。
 - [开发路线](docs/development/roadmap.md)：下一阶段目标和验收标准。
+- [CLI 说明](cli/README.md)：`fm` 命令、本地/账号模式和安装入口。
 
 会话交接和验收过程保存在忽略的 `.local/`，不进入 Git。旧原型通过 `pre-refactor-2026-11-14` tag 查阅，历史本地版范围见 [1.0.0 说明](docs/releases/1.0.0.md)。

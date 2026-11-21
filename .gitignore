@@ -2,6 +2,7 @@
 *.local
 
 web/node_modules/
+cli/node_modules/
 web/dist/
 web/dist-worker/
 web/coverage/

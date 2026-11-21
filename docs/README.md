@@ -17,6 +17,7 @@ FingerMemory 的长期文档按产品、架构、接口、开发、运维和版�
 | 如何写出可维护代码、如何提交 | [开发规范](development/README.md) |
 | 立绘、音效与 Git LFS | [资源管理](development/assets.md) |
 | 接下来的实施顺序与验收要求 | [开发路线](development/roadmap.md) |
+| `fm` 命令、本地/账号模式与安装入口 | [CLI 说明](../cli/README.md) |
 | 导入旧数据、账号迁移、备份恢复 | [数据迁移](operations/data-migration.md) |
 | 默认管理员、GM 页面与隔离测试 | [GM 管理](operations/gm.md) |
 | 旧 1.0.0 版本的实际范围 | [版本说明](releases/1.0.0.md) |
