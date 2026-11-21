@@ -1,70 +1,137 @@
-# 使用说明
+# FingerMemory CLI
 
-[FingerMemory](https://github.com/nobility-zhang/FingerMemory)是基于node编写的一款快捷的手指记忆工具:alarm_clock:
+键盘优先的英语学习命令行工具。当前版本同时支持：
 
-## 编写此类程序初衷
+- 独立本地模式：词库、会话、正式复习、退出恢复和 Web 兼容的 v5 JSON。
+- 账号模式：个人访问令牌、在线会话、拼写/闪卡评分和文字卡牌检查点。
+- 非交互终端：无提示符的行式输出、stdin 命令与 `--json` 结果。
+- 数据互通：本地 v3/v4/v5 快照导入导出，以及账号完整备份预览/恢复。
 
-大多数人都遇到过以下情况，在完全没有代码提示的情况下，会忘记某些单词的拼写，在查阅中往往会浪费很多时间，此时单词的拼写显得尤为重要
+旧版 `node app.js`、`config.js` 和 `src/` 保留用于历史查阅，不再是新功能入口。
+新命令从 `cli/main.mjs` 启动。
 
-有很多记忆单词的软件，如anki、quizlet等，但是他都不怎么适合我，why？
+## 环境
 
-- 有些人背诵时，用笔在纸上写
-- 有些人背诵时，大声朗读出来
-- 有些人背诵时，心里默默的读
+需要 Node.js 24.19 或更新的版本。安装依赖：
 
-我不属于这其中的任何一类人，我喜欢在背诵的时后使用键盘敲击，这样anki类的卡片记忆就无法满足，因为它们支支持那种卡片的记忆模式，对于coder来讲，手指记忆哪些没有任何逻辑的单词，比脑子记住要简单些
-
-## 使用步骤
-
-1. 你的电脑必须先安装node
-
-2. 执行`git clone https://github.com/nobility-zhang/FingerMemory.git`
-
-3. 对config.js进行简单的配置即可运行，打开配置文件会有注释说明
-
-4. 根据配置文件导入你要背诵的单词，请按照以下顺序进行排序，分隔符默认为tab
-
-   1. `word	单词	[帮助信息...]`
-
-5. ```powershell
-   cd FingerMemory/
-   node app.js
-   ```
-
-## 特点
-
-虽然[FingerMemory](https://github.com/nobility-zhang/FingerMemory)是一个cli的工具，但是功能也很强大
-
-- 支持对导入单词表进行自定义分组个数
-- 支持不正常退出后记忆退出的进度
-- 有较美观的输出
-- 内置四种模式选择
-  1. 背诵模式
-     1. 显示单词和词义，进行敲击背诵
-     2. 输入错误会直接重新提问
-  2. 顺序提问模式
-     1. 显示单词，输入其含义
-     2. `?`弹出提示
-  3. 随机提问模式
-     1. 随机的生成单词测试题，进行测试
-     2. 有此次分数统计功能
-  4. 单词卡模式
-     1. `?`代表忘记，后续会继续输出
-     2. 可以输入任意字符背诵，后续会继续输出
-     3. 直接按enter键代表已经掌握，将此单词直接跳过
-
-## 实现思想
-
-```mermaid
-graph LR
-   B["word"]
-   B-->C["temporaryCache"]
-   C-->D["cache_1,cache_2,..."]
+```sh
+npm ci
+node cli/main.mjs --help
 ```
 
-这样生成cache文件，就算单词文件丢失也可以继续记忆
+可以执行 `npm link` 后使用 `fm`，或始终通过 `node cli/main.mjs` 运行。
 
-## 后续
+## 本地模式
 
-由于cli工具界面没有web界面那么美观，会继续进行单机的web版本开发
+配置根目录默认为 `~/.finger-memory`。本地和账号 profile 在不同目录中保存，
+切换账号不会覆盖本地词库或会话。
 
+```sh
+fm lexicon import words.tsv --name "日常英语"
+fm lexicon list
+fm learn --learning-mode keyboard-recall
+fm learn --resume
+fm data status
+fm data export --output finger-memory-v5.json
+fm data import finger-memory-v5.json --yes
+```
+
+本地快照与 Web 的本地数据库兼容：
+
+- `snapshotVersion: 1`
+- v3/v4 导入后升级为 `schemaVersion: 5`、`dataFormatVersion: 5`
+- 正式复习使用固定 `ts-fsrs@6.0.0`、FSRS-7 和与 Web 相同的会话结构
+- 导入先完整解析、校验版本和跨表引用；失败不覆盖当前状态
+
+本地状态文件权限为 `0600`，目录权限为 `0700`。退出、EOF 或 `pause` 会原子保存暂停
+检查点。
+
+## 账号模式
+
+账号令牌通过隐藏输入创建或保存，不接受命令行明文参数：
+
+```sh
+fm --mode account auth login
+fm --mode account auth status
+fm --mode account auth set-token
+```
+
+`auth login` 只在当前进程使用用户名/密码建立 Cookie 会话，随后创建 90 天 PAT，
+保存到 profile 的 `token` 文件；密码不会落盘。也可以在 Web 账号页创建或撤销令牌，
+再通过 `auth set-token` 保存。
+
+也可以由受控环境注入：
+
+```sh
+FINGER_MEMORY_SERVER=http://127.0.0.1:8080/api/v1 \
+FINGER_MEMORY_TOKEN='fm_pat_...' \
+fm --mode account auth status
+```
+
+令牌不会进入日志、命令参数或导出文件。服务端只保存 SHA-256 摘要；PAT 不能执行
+Web 令牌管理、GM 管理或借用浏览器管理员 Cookie。
+
+## 在线学习
+
+```sh
+fm --mode account lexicon list
+fm --mode account lexicon import words.tsv --name "在线词库"
+fm --mode account learn --learning-mode keyboard-recall
+fm --mode account learn --resume
+```
+
+拼写模式直接输入英文答案；`hint`、`reveal` 后输入 `done` 只完成练习，不写正式复习。
+闪卡模式使用 `flip`，明确没想起时输入 `again`，之后按真实状态选择：
+
+```text
+1 Again    2 Hard    3 Good    4 Easy
+```
+
+网络重试继续使用同一个提交 ID；版本冲突会要求刷新或恢复最新服务端会话。
+
+## 文字卡牌
+
+```sh
+fm --mode account battle list
+fm --mode account battle --resume
+fm --mode account battle --battle BATTLE_ID
+fm --mode account battle \
+  --session SESSION_ID \
+  --study-item STUDY_ITEM_ID \
+  --encounter cli-training \
+  --companion lia
+```
+
+终端按编号列出手牌、能量、敌方生命/格挡/灼烧和本回合意图：
+
+```text
+play 1         打出第一张牌
+play 2 1       第二张牌攻击一号敌人
+skill          使用本场唯一伙伴技能
+end            结束回合并绑定下一学习任务
+status         重印当前检查点
+pause          退出，状态保留在服务端
+```
+
+学习授能、出牌、伙伴技能与结束回合都有稳定幂等键和版本检查。Web 账号页会列出同一
+服务端上的活动文字卡牌并允许继续。
+
+## 非 TTY
+
+stdin 是管道时，CLI 不输出提示符，只输出稳定的 `EVENT key=value` 行。示例：
+
+```sh
+printf 'bridge\n3\npause\n' |
+  fm --mode account learn --session SESSION_ID
+```
+
+脚本化和检查结果可加 `--json`。账号与本地 profile 可通过 `--profile` 分开。
+
+## 验证
+
+```sh
+npm run check
+npm test
+```
+
+测试使用临时目录、假词条和本机开发服务，不读取真实账号、生产 secrets 或用户数据。
