@@ -4,6 +4,7 @@
 
 - 独立本地模式：词库、会话、正式复习、退出恢复和 Web 兼容的 v5 JSON。
 - 账号模式：个人访问令牌、在线会话、拼写/闪卡评分和文字卡牌检查点。
+- 文字冒险：固定版本 `run`、剧情选择、遭遇战斗、牌组奖励与跨端恢复。
 - 非交互终端：无提示符的行式输出、stdin 命令与 `--json` 结果。
 - 数据互通：本地 v3/v4/v5 快照导入导出，以及账号完整备份预览/恢复。
 
@@ -115,6 +116,46 @@ pause          退出，状态保留在服务端
 
 学习授能、出牌、伙伴技能与结束回合都有稳定幂等键和版本检查。Web 账号页会列出同一
 服务端上的活动文字卡牌并允许继续。
+
+## 文字冒险
+
+先查看账号已安装的 `.fmbook` 和结局前置条件：
+
+```sh
+fm --mode account adventure books
+fm --mode account adventure list
+fm --mode account adventure completions
+```
+
+启动固定版本并使用指定伙伴：
+
+```sh
+fm --mode account adventure start \
+  --install INSTALLATION_ID \
+  --companion lia
+```
+
+`start` 只创建/返回服务端 run 并打印检查点。进入文字剧情：
+
+```sh
+fm --mode account adventure resume RUN_ID
+fm --mode account adventure show RUN_ID
+```
+
+交互命令：
+
+```text
+next                       推进对白、探索或营地节点
+choose 1                   选择编号剧情分支
+fight                      创建或恢复当前遭遇战斗
+resolve                    把 victory/defeat 写回冒险
+reward 1                   领取遭遇后的牌组奖励
+companion 1                在营地切换已解锁伙伴
+complete                   完成章节结算节点
+status / refresh / pause   查看、刷新或退出
+```
+
+每个剧情动作、开战和奖励选择在发送前保存稳定幂等键；进程在响应丢失后退出时，再次执行同一检查点动作会复用原 action ID。Web 与 CLI 只交接 `runVersion + nodeId + battleId` 等已提交状态，不传画面或动画时间。
 
 ## 非 TTY
 
