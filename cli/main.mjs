@@ -7,6 +7,7 @@ import { parseGlobalArgs } from './args.mjs';
 import { resolveRuntimeConfig } from './config.mjs';
 import { ApiError, CliError, describeError } from './errors.mjs';
 import { Terminal } from './terminal.mjs';
+import { runAdventure } from './commands/adventure.mjs';
 import { runAuth } from './commands/auth.mjs';
 import { runBattle } from './commands/battle.mjs';
 import { runData } from './commands/data.mjs';
@@ -37,6 +38,8 @@ export async function main(argv = process.argv.slice(2)) {
   try {
     if (command === 'auth') {
       await runAuth({ global: parsed.global, words, terminal });
+    } else if (command === 'adventure') {
+      await runAdventure({ global: parsed.global, words, terminal });
     } else if (command === 'learn') {
       await runLearn({ global: parsed.global, words, terminal });
     } else if (command === 'battle') {
@@ -132,6 +135,11 @@ function printHelp(output) {
   auth status            校验账号服务器与令牌
   auth set-token         从隐藏输入或环境读取令牌
   auth logout            移除本机令牌
+  adventure books        列出已安装冒险与前置结局
+  adventure list         列出进行中的冒险
+  adventure show [ID]    查看文本检查点
+  adventure start        启动固定版本冒险
+  adventure resume [ID]  进入文字剧情与遭遇
   lexicon list           列出词库
   lexicon import FILE    从 TSV 导入词库
   learn                  创建或继续学习会话

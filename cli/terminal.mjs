@@ -136,5 +136,6 @@ function formatField(value) {
   if (typeof value === 'object') {
     return JSON.stringify(value);
   }
-  return String(value).replaceAll(/\s+/g, '_');
+  const text = String(value);
+  return /\s/.test(text) ? JSON.stringify(text) : text;
 }

@@ -89,12 +89,13 @@ export async function runBattle({ global, words, terminal }) {
   await controller.run();
 }
 
-class BattleController {
-  constructor(api, envelope, terminal, checkpoints) {
+export class BattleController {
+  constructor(api, envelope, terminal, checkpoints, options = {}) {
     this.api = api;
     this.envelope = envelope;
     this.terminal = terminal;
     this.checkpoints = checkpoints;
+    this.closeTerminal = options.closeTerminal ?? true;
   }
 
   get battle() {
@@ -111,7 +112,7 @@ class BattleController {
         if (this.battle.phase === 'player-action') {
           const action = await this.runPlayerPhase();
           if (action === 'exit') {
-            return;
+            return 'exit';
           }
           continue;
         }
@@ -124,10 +125,12 @@ class BattleController {
         if (this.terminal.json) {
           this.terminal.printJson(this.envelope);
         }
-        return;
+        return this.battle.phase;
       }
     } finally {
-      this.terminal.close();
+      if (this.closeTerminal) {
+        this.terminal.close();
+      }
     }
   }
 

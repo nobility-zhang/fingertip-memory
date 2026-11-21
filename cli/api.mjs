@@ -149,6 +149,75 @@ export class AccountApiClient {
     return this.battleCommand(input.battleId, 'end-turn', input);
   }
 
+  async listAdventures(limit = 20) {
+    return this.request(`/adventures?limit=${encodeURIComponent(String(limit))}`);
+  }
+
+  async listContentPackages(limit = 50) {
+    return this.request(
+      `/content-packages?limit=${encodeURIComponent(String(limit))}`,
+    );
+  }
+
+  async listAdventureCompletions(limit = 50) {
+    return this.request(
+      `/adventures/completions?limit=${encodeURIComponent(String(limit))}`,
+    );
+  }
+
+  async startAdventure(input) {
+    return this.request('/adventures', {
+      method: 'POST',
+      idempotencyKey: input.actionId,
+      body: {
+        installationId: input.installationId,
+        companionKey: input.companionKey,
+        sourceCompletionId: input.sourceCompletionId,
+        reduceMotion: true,
+      },
+      retry: true,
+    });
+  }
+
+  async getAdventure(runId) {
+    return this.request(`/adventures/${encodeURIComponent(runId)}`);
+  }
+
+  async upgradeAdventure(input) {
+    return this.request(
+      `/adventures/${encodeURIComponent(input.runId)}/upgrade`,
+      {
+        method: 'POST',
+        idempotencyKey: input.actionId,
+        body: { installationId: input.installationId },
+        retry: true,
+      },
+    );
+  }
+
+  async startAdventureEncounter(input) {
+    return this.request(
+      `/adventures/${encodeURIComponent(input.runId)}/encounters`,
+      {
+        method: 'POST',
+        idempotencyKey: input.actionId,
+        retry: true,
+      },
+    );
+  }
+
+  async actAdventure(input) {
+    return this.request(
+      `/adventures/${encodeURIComponent(input.runId)}/actions`,
+      {
+        method: 'POST',
+        idempotencyKey: input.actionId,
+        body: input.body,
+        retry: true,
+      },
+    );
+  }
+
   async exportBackup() {
     return this.request('/backup/export');
   }
