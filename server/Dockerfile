@@ -25,6 +25,9 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=server-build /build/server/target/finger-memory-server-0.1.0-SNAPSHOT.jar /app/app.jar
 
+RUN mkdir -p /var/lib/finger-memory/content \
+    && chown -R finger-memory:finger-memory /var/lib/finger-memory
+
 USER finger-memory
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
