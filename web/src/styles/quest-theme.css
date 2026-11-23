@@ -1,0 +1,705 @@
+.primary-nav {
+  position: relative;
+  padding: 26px 15px 18px;
+  border-right-color: rgb(214 176 102 / 22%);
+  background:
+    linear-gradient(90deg, rgb(255 229 177 / 3%) 1px, transparent 1px) 0 0 / 18px 18px,
+    linear-gradient(180deg, rgb(47 31 25 / 96%), rgb(25 17 18 / 98%));
+  box-shadow:
+    inset -1px 0 rgb(255 229 177 / 5%),
+    18px 0 44px rgb(13 8 9 / 14%);
+}
+
+.nav-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 7px 18px;
+  color: #c9a467;
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+}
+
+.nav-label::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgb(214 176 102 / 48%), transparent);
+}
+
+.nav-list {
+  gap: 7px;
+}
+
+.nav-item {
+  position: relative;
+  min-height: 46px;
+  padding: 8px 11px 8px 9px;
+  border-color: rgb(214 176 102 / 9%);
+  border-radius: 5px 12px 5px 12px;
+  background:
+    linear-gradient(90deg, rgb(255 231 184 / 3%), transparent 68%),
+    rgb(39 27 24 / 62%);
+  color: #c9b597;
+  box-shadow: inset 0 0 0 1px rgb(255 235 195 / 2%);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.nav-item svg {
+  width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+  padding: 7px;
+  border: 1px solid rgb(212 174 101 / 22%);
+  border-radius: 50%;
+  background: rgb(24 17 17 / 62%);
+  color: #cba968;
+}
+
+.nav-item span {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.nav-item::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  transform: rotate(45deg);
+}
+
+.nav-item:hover {
+  border-color: rgb(226 190 119 / 34%);
+  background: rgb(66 45 34 / 78%);
+  color: #f1dfc0;
+  transform: translateX(2px);
+}
+
+.nav-item--active {
+  border-color: rgb(231 193 119 / 54%);
+  background:
+    linear-gradient(90deg, rgb(226 187 111 / 21%), rgb(123 79 44 / 18%)),
+    rgb(53 36 29 / 88%);
+  color: #fff0cf;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 232 184 / 7%),
+    0 8px 24px rgb(10 6 7 / 18%);
+}
+
+.nav-item--active svg {
+  border-color: rgb(242 208 140 / 58%);
+  background: linear-gradient(180deg, #d6b069, #9b6b35);
+  color: #2e2118;
+  box-shadow: 0 0 18px rgb(220 176 96 / 18%);
+}
+
+.nav-item--active::after {
+  border-color: #e1bf7a;
+  background: #b48649;
+}
+
+.nav-item:focus-visible {
+  outline-color: rgb(239 205 141 / 56%);
+}
+
+.storage-note {
+  padding: 15px 10px 0;
+  border-top: 1px solid rgb(214 176 102 / 12%);
+  color: #9d8568;
+}
+
+.workspace.workspace--quest {
+  --quest-paper: #ead9b3;
+  --quest-paper-light: #f5e7c7;
+  --quest-paper-deep: #d5bd8a;
+  --quest-ink: #302318;
+  --quest-muted: #6d5842;
+  --quest-line: rgb(92 61 27 / 32%);
+  --quest-line-strong: rgb(92 61 27 / 52%);
+  --quest-gold: #b47a35;
+  --quest-gold-light: #e2bf78;
+  --quest-green: #304c3b;
+  --quest-green-deep: #20372b;
+  --quest-red: #843e32;
+  position: relative;
+  max-width: none;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 74% 34%, rgb(245 196 111 / 18%), transparent 26%),
+    linear-gradient(100deg, rgb(17 11 12 / 94%) 0 34%, rgb(20 14 15 / 62%) 72%, rgb(14 10 11 / 86%)),
+    url("../assets/scenes/inn/runtime/inn-warm-lantern.jpg") center / cover no-repeat;
+}
+
+.workspace.workspace--quest::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(237 197 120 / 4%) 1px, transparent 1px) 0 0 / 38px 38px,
+    linear-gradient(rgb(237 197 120 / 3%) 1px, transparent 1px) 0 0 / 38px 38px,
+    radial-gradient(circle at 50% 0, rgb(244 206 136 / 10%), transparent 42%);
+  content: "";
+}
+
+.workspace.workspace--quest::after {
+  position: absolute;
+  z-index: -1;
+  inset: 15px;
+  border: 1px solid rgb(222 183 111 / 13%);
+  pointer-events: none;
+  content: "";
+}
+
+.workspace.workspace--quest > * {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace.workspace--quest .workspace-heading {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto 21px;
+  padding: 17px 20px;
+  border: 1px solid rgb(231 194 124 / 38%);
+  border-radius: 5px 14px 5px 14px;
+  background:
+    linear-gradient(90deg, rgb(230 190 113 / 12%), transparent 56%),
+    rgb(30 20 19 / 88%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 232 183 / 4%),
+    0 18px 48px rgb(10 6 7 / 25%);
+  backdrop-filter: blur(15px);
+}
+
+.quest-heading-sigil {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgb(231 195 126 / 45%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgb(215 169 89 / 20%), transparent 70%),
+    #2d1e1b;
+  color: #e2bd76;
+  box-shadow: inset 0 0 0 4px rgb(226 185 108 / 5%);
+}
+
+.quest-heading-copy {
+  min-width: 0;
+}
+
+.workspace.workspace--quest .workspace-heading .section-label {
+  margin-bottom: 4px;
+  color: #c5a267;
+  letter-spacing: 0.12em;
+}
+
+.workspace.workspace--quest .workspace-heading h1 {
+  overflow: hidden;
+  margin: 0;
+  color: #fff0d5;
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  font-size: clamp(2rem, 3vw, 2.9rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace.workspace--quest .local-badge {
+  border-color: rgb(224 187 115 / 30%);
+  background: rgb(67 44 31 / 68%);
+  color: #dfc28c;
+}
+
+.workspace.workspace--quest :is(
+  .practice-lobby,
+  .workspace-state,
+  .lexicon-sidebar,
+  .lexicon-content,
+  .no-lexicon,
+  .review-workspace,
+  .data-workspace,
+  .account-workspace,
+  .workbench
+) {
+  border: 1px solid var(--quest-line-strong);
+  border-radius: 6px 16px 6px 16px;
+  color: var(--quest-ink);
+  background:
+    linear-gradient(90deg, rgb(95 61 24 / 4%) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(rgb(95 61 24 / 3%) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(145deg, rgb(248 235 204 / 98%), rgb(224 203 159 / 98%));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 249 229 / 48%),
+    inset 0 0 0 5px rgb(94 61 28 / 4%),
+    0 26px 70px rgb(11 7 8 / 34%);
+}
+
+.workspace.workspace--quest :is(
+  .practice-lobby,
+  .review-workspace,
+  .data-workspace,
+  .account-workspace,
+  .workbench
+) {
+  padding: clamp(22px, 3.5vw, 40px);
+}
+
+.workspace.workspace--quest .lexicon-sidebar,
+.workspace.workspace--quest .lexicon-content {
+  padding: 22px;
+}
+
+.workspace.workspace--quest :is(
+  .practice-lobby,
+  .lexicon-sidebar,
+  .lexicon-content,
+  .no-lexicon,
+  .review-workspace,
+  .data-workspace,
+  .account-workspace,
+  .workbench
+) :is(h2, h3, h4, strong, dd) {
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest :is(
+  .practice-lobby,
+  .lexicon-manager,
+  .review-workspace,
+  .data-workspace,
+  .account-workspace,
+  .workbench
+) :is(p, span, small, dt, li) {
+  color: var(--quest-muted);
+}
+
+.workspace.workspace--quest :is(
+  .lobby-kicker,
+  .manager-kicker,
+  .session-kicker,
+  .answer-eyebrow,
+  .section-label
+) {
+  color: #8d642d;
+}
+
+.workspace.workspace--quest :is(
+  .legacy-session,
+  .queue-policy,
+  .mode-policy,
+  .reminder-settings,
+  .edit-lexicon,
+  .confirm-panel,
+  .word-form,
+  .import-disclosure,
+  .note-editor,
+  .review-state,
+  .review-entry,
+  .log-list > li,
+  .export-panel,
+  .import-panel,
+  .counts-panel,
+  .storage-panel,
+  .auth-panel,
+  .cloud-lexicons,
+  .profile-strip,
+  .migration-preview,
+  .online-card,
+  .lexicon-list li,
+  .session-review-status,
+  .complete-panel,
+  .abandon-confirm,
+  .content-library,
+  .content-preview,
+  .shared-catalog,
+  .installation-list li,
+  .token-panel,
+  .token-panel li,
+  .created-token,
+  .reminder-banner
+) {
+  border-color: var(--quest-line);
+  border-radius: 4px 10px 4px 10px;
+  background:
+    linear-gradient(135deg, rgb(255 249 231 / 48%), rgb(218 194 146 / 20%)),
+    rgb(240 225 192 / 56%);
+  box-shadow: inset 0 0 0 1px rgb(255 249 230 / 26%);
+}
+
+.workspace.workspace--quest :is(
+  .legacy-session,
+  .queue-policy,
+  .mode-policy,
+  .reminder-settings,
+  .edit-lexicon,
+  .confirm-panel,
+  .word-form,
+  .import-disclosure,
+  .note-editor,
+  .review-entry,
+  .review-state,
+  .export-panel,
+  .import-panel,
+  .counts-panel,
+  .storage-panel,
+  .auth-panel,
+  .cloud-lexicons,
+  .migration-preview,
+  .online-card,
+  .session-review-status,
+  .complete-panel,
+  .abandon-confirm,
+  .content-library,
+  .token-panel
+) {
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest :is(
+  .lexicon-list button.selected,
+  .auth-tabs button.selected
+) {
+  border-color: rgb(103 69 30 / 66%);
+  background: rgb(176 129 65 / 24%);
+  color: var(--quest-ink);
+  box-shadow: inset 3px 0 #9d692e;
+}
+
+.workspace.workspace--quest :is(.lexicon-list, .word-list, .review-list, .log-list) {
+  color: var(--quest-muted);
+}
+
+.workspace.workspace--quest .word-list > li {
+  border-color: var(--quest-line);
+  border-radius: 3px 9px 3px 9px;
+  background: rgb(246 233 201 / 44%);
+}
+
+.workspace.workspace--quest :is(.word-title strong, .lexicon-list strong) {
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest :is(.word-title span, .word-list li > p, .lexicon-list small) {
+  color: var(--quest-muted);
+}
+
+.workspace.workspace--quest .note-summary {
+  border-left-color: #8c7d4f;
+  background: rgb(230 219 178 / 54%);
+  color: #4f4930;
+}
+
+.workspace.workspace--quest :is(.review-intro, .data-heading, .account-heading, .session-header) {
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--quest-line);
+}
+
+.workspace.workspace--quest :is(.review-intro, .data-heading, .account-heading) h2 {
+  color: var(--quest-ink);
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+}
+
+.workspace.workspace--quest :is(.review-metrics, .state-grid, .log-grid) {
+  background: var(--quest-line);
+}
+
+.workspace.workspace--quest :is(.review-metrics, .state-grid, .log-grid) > div {
+  background: rgb(247 233 200 / 82%);
+}
+
+.workspace.workspace--quest :is(.review-metrics, .state-grid, .log-grid) dd {
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest .consistency-badge {
+  border: 1px solid rgb(56 87 65 / 32%);
+  background: rgb(68 104 78 / 16%);
+  color: #36533f;
+}
+
+.workspace.workspace--quest .consistency-badge--error,
+.workspace.workspace--quest :is(.diagnostic-alert, .data-error, .account-error, .manager-error, .content-message--error) {
+  border-color: rgb(127 58 47 / 35%);
+  background: rgb(150 72 54 / 14%);
+  color: var(--quest-red);
+}
+
+.workspace.workspace--quest :is(.migration-notice, .data-notice, .inline-notice, .content-message) {
+  border-color: rgb(47 91 65 / 30%);
+  background: rgb(65 107 77 / 14%);
+  color: #345640;
+}
+
+.workspace.workspace--quest :is(
+  input,
+  textarea,
+  select
+) {
+  border-color: rgb(92 65 34 / 46%);
+  border-radius: 4px;
+  background: rgb(255 248 229 / 78%);
+  color: var(--quest-ink);
+  box-shadow: inset 0 1px 3px rgb(65 42 20 / 10%);
+}
+
+.workspace.workspace--quest :is(input, textarea, select)::placeholder {
+  color: #927a5f;
+}
+
+.workspace.workspace--quest input[type="file"] {
+  padding: 5px;
+  font-size: 0.75rem;
+}
+
+.workspace.workspace--quest input[type="file"]::file-selector-button {
+  margin-right: 9px;
+  padding: 6px 10px;
+  border: 1px solid rgb(77 54 29 / 52%);
+  border-radius: 3px 7px 3px 7px;
+  background: linear-gradient(180deg, #f2dcb0, #d5af70);
+  color: #3c2c1d;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.workspace.workspace--quest input[type="range"] {
+  accent-color: #456b50;
+}
+
+.workspace.workspace--quest :is(
+  .queue-fields input[type="number"],
+  .queue-pause,
+  .mode-preferences label
+) {
+  border-color: var(--quest-line);
+  background: rgb(255 248 229 / 56%);
+}
+
+.workspace.workspace--quest button:not(.nav-item):not(.rating-button) {
+  border: 1px solid rgb(77 54 29 / 52%);
+  border-radius: 4px 9px 4px 9px;
+  background:
+    linear-gradient(180deg, rgb(255 247 225 / 76%), rgb(217 192 143 / 72%));
+  color: #3c2c1d;
+  box-shadow:
+    inset 0 1px rgb(255 252 239 / 72%),
+    0 2px 0 rgb(89 59 28 / 18%);
+  font-weight: 700;
+}
+
+.workspace.workspace--quest button:not(.nav-item):not(.rating-button):hover:not(:disabled) {
+  border-color: rgb(84 57 26 / 76%);
+  background:
+    linear-gradient(180deg, rgb(255 251 236 / 88%), rgb(226 197 142 / 82%));
+}
+
+.workspace.workspace--quest :is(
+  .primary-action,
+  .continue-action,
+  .form-actions button
+) {
+  border-color: #8d632e;
+  background: linear-gradient(180deg, #f0d49c, #c99b57);
+  color: #302116;
+}
+
+.workspace.workspace--quest :is(.danger-action, .quiet-danger) {
+  border-color: rgb(126 55 42 / 48%);
+  background: linear-gradient(180deg, #f1d4bd, #d8a887);
+  color: #6d3027;
+}
+
+.workspace.workspace--quest button:disabled {
+  filter: grayscale(0.35);
+}
+
+.workspace.workspace--quest :is(button, input, textarea, select, summary):focus-visible {
+  outline: 3px solid rgb(183 126 51 / 42%);
+  outline-offset: 2px;
+}
+
+.workspace.workspace--quest :is(.local-badge, .mode-badge, .empty-state) {
+  border-color: rgb(112 75 33 / 34%);
+  background: rgb(239 221 180 / 58%);
+  color: #6e4d27;
+}
+
+.workspace.workspace--quest .flashcard-shell,
+.workspace.workspace--quest .keyboard-card {
+  position: relative;
+  border: 2px solid rgb(96 63 29 / 52%);
+  border-radius: 8px 22px 8px 22px;
+  background:
+    radial-gradient(circle at 50% 30%, rgb(255 251 235 / 88%), transparent 56%),
+    linear-gradient(145deg, #f8eaca, #ddc79b);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 250 232 / 64%),
+    inset 0 0 0 7px rgb(105 69 31 / 4%),
+    0 24px 62px rgb(57 34 17 / 24%);
+}
+
+.workspace.workspace--quest .flashcard-shell::before,
+.workspace.workspace--quest .flashcard-shell::after,
+.workspace.workspace--quest .keyboard-card::before,
+.workspace.workspace--quest .keyboard-card::after {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: rgb(137 89 38 / 62%);
+  content: "";
+  pointer-events: none;
+}
+
+.workspace.workspace--quest .flashcard-shell::before,
+.workspace.workspace--quest .keyboard-card::before {
+  top: 10px;
+  left: 10px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.workspace.workspace--quest .flashcard-shell::after,
+.workspace.workspace--quest .keyboard-card::after {
+  right: 10px;
+  bottom: 10px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.workspace.workspace--quest :is(.face-copy h3, .answer-copy h3, .keyboard-card h2) {
+  color: var(--quest-ink);
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+}
+
+.workspace.workspace--quest .answer-panel {
+  border-color: var(--quest-line);
+  border-radius: 5px 12px 5px 12px;
+  background: rgb(243 228 194 / 72%);
+}
+
+.workspace.workspace--quest :is(.hint-box, .answer-reveal, .feedback, .paused-note) {
+  border-color: var(--quest-line);
+  background: rgb(255 247 225 / 48%);
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest .rating-button {
+  border-color: var(--quest-line);
+  border-radius: 4px 10px 4px 10px;
+  background: rgb(249 237 207 / 72%);
+  color: var(--quest-ink);
+}
+
+.workspace.workspace--quest .rating-button:hover:not(:disabled) {
+  border-color: rgb(126 83 33 / 68%);
+  background: rgb(255 246 221 / 90%);
+}
+
+.workspace.workspace--quest .rating-button.again-selected {
+  border-color: #a46331;
+  background: #f4dfb6;
+}
+
+.workspace.workspace--quest .workspace-footer {
+  max-width: 1180px;
+  width: 100%;
+  margin: 24px auto 0;
+  padding: 12px 2px 0;
+  border-top: 1px solid rgb(222 183 111 / 16%);
+  color: #a99475;
+}
+
+@media (max-width: 720px) {
+  .primary-nav {
+    padding: 13px 14px 14px;
+  }
+
+  .nav-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .nav-item {
+    min-height: 62px;
+    padding: 7px 4px;
+    transform: none;
+  }
+
+  .nav-item:hover {
+    transform: none;
+  }
+
+  .nav-item svg {
+    width: 28px;
+    height: 28px;
+    padding: 6px;
+  }
+
+  .nav-item span {
+    flex: none;
+    font-size: 0.68rem;
+  }
+
+  .nav-item::after {
+    display: none;
+  }
+
+  .workspace.workspace--quest {
+    padding: 18px 14px 26px;
+  }
+
+  .workspace.workspace--quest::after {
+    inset: 7px;
+  }
+
+  .workspace.workspace--quest .workspace-heading {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .quest-heading-sigil {
+    width: 40px;
+    height: 40px;
+  }
+
+  .workspace.workspace--quest .workspace-heading h1 {
+    font-size: 1.9rem;
+    white-space: normal;
+  }
+
+  .workspace.workspace--quest .local-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .workspace.workspace--quest :is(
+    .practice-lobby,
+    .review-workspace,
+    .data-workspace,
+    .account-workspace,
+    .workbench
+  ) {
+    padding: 18px;
+  }
+
+  .workspace.workspace--quest .lexicon-sidebar,
+  .workspace.workspace--quest .lexicon-content {
+    padding: 16px;
+  }
+}

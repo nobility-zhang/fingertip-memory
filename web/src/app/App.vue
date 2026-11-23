@@ -12,6 +12,7 @@ import {
   Home,
   Keyboard,
   LibraryBig,
+  ScrollText,
   UserRound,
 } from '@lucide/vue';
 import type { FingerMemoryRepository, StorageStatus } from '../core/repository';
@@ -76,6 +77,18 @@ const localBadgeText = computed(() => {
   return `${model} · 数据 v${storageStatus.value.schemaVersion}`;
 });
 
+const stageLabel = computed(() => {
+  const labels = {
+    game: 'G1 · 暖灯旅店',
+    practice: '旅团手册 · 记忆训练',
+    library: '旅团行囊 · 词库整备',
+    review: '星辉回路 · 复习观测',
+    data: '旅途档案 · 存档管理',
+    account: '旅团名册 · 跨设备同行',
+  } as const;
+  return labels[activeView.value];
+});
+
 const viewHeading = computed(() => {
   if (activeView.value === 'library') {
     return { label: '词库', title: '词库管理' };
@@ -134,7 +147,7 @@ onBeforeUnmount(() => {
         <span class="brand-mark" aria-hidden="true">F</span>
         <span>FingerMemory</span>
       </a>
-      <span class="stage-label">G1 · 暖灯旅店</span>
+      <span class="stage-label">{{ stageLabel }}</span>
     </header>
 
     <div class="app-layout">
@@ -220,9 +233,18 @@ onBeforeUnmount(() => {
         </div>
       </nav>
 
-      <main class="workspace" :class="{ 'workspace--game': activeView === 'game' }">
+      <main
+        class="workspace"
+        :class="{
+          'workspace--game': activeView === 'game',
+          'workspace--quest': activeView !== 'game',
+        }"
+      >
         <header v-if="activeView !== 'game'" class="workspace-heading">
-          <div>
+          <span class="quest-heading-sigil" aria-hidden="true">
+            <ScrollText :size="24" />
+          </span>
+          <div class="quest-heading-copy">
             <p class="section-label">{{ viewHeading.label }}</p>
             <h1>{{ viewHeading.title }}</h1>
           </div>

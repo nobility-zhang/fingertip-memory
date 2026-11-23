@@ -155,6 +155,10 @@ describe('App', () => {
     localButton?.click();
     await flushAsyncWork();
     expect(root.querySelector('h1')?.textContent).toBe('经典学习卡片');
+    expect(root.querySelector('main.workspace')?.classList.contains('workspace--quest'))
+      .toBe(true);
+    expect(root.querySelector('.quest-heading-sigil')).not.toBeNull();
+    expect(root.textContent).toContain('旅团手册 · 记忆训练');
     expect(root.querySelector('[data-testid="storage-summary"]')?.textContent?.trim()).toBe(
       'FSRS-7 · 数据 v3',
     );
