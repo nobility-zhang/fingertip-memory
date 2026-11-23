@@ -59,7 +59,28 @@ docker compose up --build -d
 
 应用仅绑定 `127.0.0.1:${APP_PORT}`，应由受控反向代理提供 HTTPS。生产模板默认 `SESSION_COOKIE_SECURE=true`，本地纯 HTTP 验证时才可显式设为 `false`。
 
-数据库迁移由 Flyway 在应用启动时执行。当前没有自动备份或恢复；生产部署前必须另行实现和验证数据库备份。
+数据库迁移由 Flyway 在应用启动时执行。生产数据备份包含 MySQL 逻辑备份和
+`content-data` 卷；默认写入忽略目录 `server/backups/`：
+
+```sh
+cd server
+./scripts/backup-server-data.sh
+```
+
+恢复会先自动生成恢复前备份，再停止应用、覆盖数据库和内容卷、重启并验证健康。
+必须同时提供备份目录、固定项目确认词和显式 `--yes`：
+
+```sh
+cd server
+./scripts/restore-server-data.sh \
+  --backup backups/finger-memory-20261123T120000Z \
+  --confirm finger-memory \
+  --yes
+```
+
+若恢复中断，应用保持停止，脚本输出恢复前备份路径。备份目录需复制到受控的独立
+存储并制定保留策略；同机 `server/backups/` 不能抵御整机或磁盘丢失。`.staging`
+过程目录不进入内容卷备份。当前尚未实现定时备份、异地复制和自动保留清理。
 
 当前提供用户级 JSON 备份 v2 `GET /api/v1/backup/export` 与预览/原子恢复接口。
 备份包含学习快照、战斗、冒险、结局回执、内容安装和私有媒体；恢复会校验并从

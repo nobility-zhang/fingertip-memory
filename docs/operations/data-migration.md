@@ -54,6 +54,43 @@
 - `backupVersion=1` 继续可导入，并会按无战斗/冒险/内容的旧范围恢复；恢复不触碰
   其他用户、账号身份、角色、偏好或令牌。
 
+## 生产数据备份
+
+生产数据由 MySQL 数据库和 `content-data` 卷共同组成。数据库保存账号、学习、战斗、
+冒险、回执和内容安装元数据；内容卷保存已安装和 GM 发布的私有内容文件。两者不能只
+恢复一侧冒充完整恢复。
+
+备份入口固定读取 `server/compose.yaml`，生成目录包含：
+
+- `database.sql.gz`：MySQL 单事务逻辑备份。
+- `content-data.tar.gz`：去除 `.staging` 的内容卷快照。
+- `manifest.txt`：备份格式、UTC 时间、数据库名和 Flyway 版本。
+- `SHA256SUMS`：数据库与内容卷制品摘要。
+
+```sh
+cd server
+./scripts/backup-server-data.sh
+```
+
+默认根目录为 `server/backups/`，权限为 `0700`，已被 Git 忽略。可用
+`--output-root DIR` 改到受控挂载点，但仍须复制到独立故障域；脚本不实现定时任务、
+异地复制或自动清理。
+
+恢复要求备份目录、固定确认词和显式确认：
+
+```sh
+cd server
+./scripts/restore-server-data.sh \
+  --backup backups/finger-memory-20261123T120000Z \
+  --confirm finger-memory \
+  --yes
+```
+
+恢复先校验 gzip、SHA-256 和必需文件，再自动创建恢复前备份。随后停止 `app`，恢复
+MySQL 与内容卷，启动 `app` 并调用健康端点。数据库和卷无法在同一文件系统事务中
+原子切换，因此恢复不是零停机操作；任一步失败时应用保持停止，输出恢复前备份路径，
+操作者应检查现场后再恢复该快照，不能自动把可能不一致的服务重新上线。
+
 
 ## H 阶段新增迁移边界
 

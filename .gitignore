@@ -8,6 +8,7 @@ web/dist-worker/
 web/coverage/
 server/.env
 server/target/
+server/backups/
 
 # Local execution state and verification artifacts
 /.local/
