@@ -106,6 +106,17 @@ public class BattleStateValidator {
         if (!terminalPhase && state.terminal() != null) {
             throw JsonSupport.validation("未终结战斗不能保存终结结果");
         }
+        if (state.routeModifiers() != null) {
+            for (BattleState.RouteModifier modifier : state.routeModifiers()) {
+                if (modifier == null
+                        || !"block-first-turn".equals(modifier.type())
+                        && !"first-attack-damage".equals(modifier.type())
+                        || modifier.amount() < 1
+                        || modifier.amount() > 20) {
+                    throw JsonSupport.validation("路线开局修正无效");
+                }
+            }
+        }
     }
 
     private void validateCards(BattleState state) {

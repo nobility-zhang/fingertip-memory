@@ -38,6 +38,25 @@ public final class AdventureDtos {
             String label) {
     }
 
+    public record Stage(
+            String sceneId,
+            String focus,
+            String lia,
+            String serin,
+            String prop,
+            String light,
+            String command) {
+    }
+
+    public record Line(
+            String lineId,
+            String speaker,
+            String portraitCharacterId,
+            String text,
+            Stage stage,
+            String sound) {
+    }
+
     public record Node(
             String nodeId,
             String chapterId,
@@ -51,7 +70,8 @@ public final class AdventureDtos {
             String costumeId,
             String encounterName,
             String encounterDescription,
-            List<Choice> choices) {
+            List<Choice> choices,
+            List<Line> lines) {
     }
 
     public record Dialogue(

@@ -95,7 +95,8 @@ class BattleEngineTest {
                         "顺风投递",
                         "对首个敌人造成 6 点伤害",
                         "damage",
-                        6)));
+                        6),
+                List.of()));
         BattleTransition claimed = engine.claimLearning(
                 created.state(), 0, "review-nora");
         BattleTransition skilled = engine.useCompanionSkill(
@@ -164,7 +165,8 @@ class BattleEngineTest {
                 0,
                 null,
                 null,
-                new BattleState.Companion("lia", false));
+                new BattleState.Companion("lia", false),
+                List.of());
 
         BattleTransition transition = engine.endTurn(state, 0, null);
 
@@ -174,5 +176,74 @@ class BattleEngineTest {
                 .extracting(node -> node.path("type").asText())
                 .doesNotContain("intent-executed")
                 .contains("battle-ended");
+    }
+
+    @Test
+    void appliesTheKeepLampOpeningBlockOnceAfterTheLearningPhase() {
+        BattleTransition created = engine.create(
+                new BattleEngine.CreateBattleCommand(
+                        "battle-kept",
+                        "bridge-guardian",
+                        "task-kept",
+                        "session-kept",
+                        "study-kept",
+                        "serin",
+                        42L,
+                        false,
+                        BattleCatalog.TEACHING_DECK_ORDER,
+                        null,
+                        List.of(new BattleEngine.RouteModifierDefinition(
+                                "block-first-turn",
+                                5))));
+        assertThat(created.state().party().block()).isZero();
+        BattleTransition claimed = engine.claimLearning(
+                created.state(), 0, "review-kept");
+        assertThat(claimed.state().party().block()).isEqualTo(5);
+        assertThat(claimed.state().routeModifiers()).isEmpty();
+    }
+
+    @Test
+    void appliesTheCarryLampBonusToOnlyTheFirstDirectAttack() {
+        BattleTransition created = engine.create(
+                new BattleEngine.CreateBattleCommand(
+                        "battle-carried",
+                        "bridge-guardian",
+                        "task-carried",
+                        "session-carried",
+                        "study-carried",
+                        "lia",
+                        42L,
+                        false,
+                        BattleCatalog.TEACHING_DECK_ORDER,
+                        null,
+                        List.of(new BattleEngine.RouteModifierDefinition(
+                                "first-attack-damage",
+                                3))));
+        BattleTransition claimed = engine.claimLearning(
+                created.state(), 0, "review-carried");
+        BattleState.CardInstance guard = claimed.state().hand().get(0);
+        BattleTransition guarded = engine.playCard(
+                claimed.state(), 1, guard.instanceId(), null);
+        assertThat(guarded.state().enemies().get(0).hp()).isEqualTo(36);
+
+        BattleState.CardInstance strike = guarded.state().hand().stream()
+                .filter(card -> "traveler-strike".equals(card.definitionId()))
+                .findFirst()
+                .orElseThrow();
+        BattleTransition firstAttack = engine.playCard(
+                guarded.state(), 2, strike.instanceId(), "bridge-guardian");
+        assertThat(firstAttack.state().enemies().get(0).hp()).isEqualTo(27);
+        assertThat(firstAttack.state().routeModifiers()).isEmpty();
+
+        BattleState.CardInstance secondStrike = firstAttack.state().hand().stream()
+                .filter(card -> "ember-rune".equals(card.definitionId()))
+                .findFirst()
+                .orElseThrow();
+        BattleTransition secondAttack = engine.playCard(
+                firstAttack.state(),
+                3,
+                secondStrike.instanceId(),
+                "bridge-guardian");
+        assertThat(secondAttack.state().enemies().get(0).hp()).isEqualTo(24);
     }
 }

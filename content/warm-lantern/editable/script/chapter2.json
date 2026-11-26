@@ -1,0 +1,30 @@
+{
+  "chapterId": "chapter-2",
+  "title": "古钟塔与绘图师",
+  "lines": [
+    {
+      "lineId": "c2-arrival-001",
+      "speaker": "fina",
+      "portraitCharacterId": "fina",
+      "text": "一个抱着地图筒的女孩从塔影里探出头。她看了看罗盘，又看了看你们：“这条路我画过三次，只有这次看见灯。叫我菲妮吧。”",
+      "stage": {
+        "sceneId": "forest-path",
+        "focus": "fina",
+        "lia": "left",
+        "serin": "right"
+      }
+    },
+    {
+      "lineId": "c2-tower-001",
+      "speaker": "serin",
+      "portraitCharacterId": "serin",
+      "text": "瑟琳把耳朵贴近钟壁。钟声从里面传出来，却没有一下能追上自己的回声。",
+      "stage": {
+        "sceneId": "forest-path",
+        "focus": "serin",
+        "lia": "left",
+        "serin": "right"
+      }
+    }
+  ]
+}

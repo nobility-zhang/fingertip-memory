@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 import {
   ArrowLeft,
   ArrowRight,
@@ -28,8 +34,8 @@ import {
   companions as builtInCompanions,
 } from '../companions/catalog';
 import { companionsForRun } from '../companions/registry';
-import AdventureAmbientAudio from './AdventureAmbientAudio.vue';
 import { sceneForNode } from './sceneCatalog';
+import { lastLineIndex, lineAt } from './storyLines';
 
 const props = withDefaults(
   defineProps<{
@@ -57,6 +63,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   choose: [choiceId: string];
   advance: [];
+  nextLine: [];
   'start-encounter': [];
   'resolve-encounter': [];
   complete: [];
@@ -67,12 +74,40 @@ const emit = defineEmits<{
 }>();
 
 const node = computed(() => props.run.currentNode);
+const lineIndex = ref(0);
 const fixedHash = computed(() => props.run.contentHash.slice(0, 8));
-const scene = computed(() => sceneForNode(
+const storyLine = computed(() => lineAt(
   node.value,
+  displayName,
+  lineIndex.value,
+));
+const sceneNode = computed(() => ({
+  ...node.value,
+  sceneId: storyLine.value.line.stage?.sceneId ?? node.value.sceneId,
+}));
+const scene = computed(() => sceneForNode(
+  sceneNode.value,
   props.run.scenes ?? [],
   props.run.installationId,
 ));
+function displayName(speaker: string): string {
+  if (speaker === 'lia') {
+    return runtimeCompanions.value.find(
+      (candidate) => candidate.id === 'lia',
+    )?.name ?? props.companion.name;
+  }
+  if (speaker === 'serin') {
+    return runtimeCompanions.value.find(
+      (candidate) => candidate.id === 'serin',
+    )?.name ?? props.companion.name;
+  }
+  if (speaker === 'fina') {
+    return runtimeCompanions.value.find(
+      (candidate) => candidate.id === 'fina',
+    )?.name ?? '菲妮';
+  }
+  return speaker;
+}
 const runtimeCompanions = computed(() => companionsForRun(
   props.run,
   props.companionOptions.length > 0
@@ -80,14 +115,19 @@ const runtimeCompanions = computed(() => companionsForRun(
     : builtInCompanions,
 ));
 const sceneCompanion = computed(() => {
-  const targetId = node.value.portraitCharacterId
+  const targetId = storyLine.value.line.stage?.command === 'choice'
+    ? props.run.companionKey
+    : node.value.portraitCharacterId
     ?? props.run.companionKey;
   return runtimeCompanions.value.find((candidate) => candidate.id === targetId)
     ?? runtimeCompanions.value[0]
     ?? props.companion;
 });
 const sceneCostumeId = computed<CompanionCostumeId>(
-  () => node.value.costumeId
+  () => storyLine.value.line.stage?.sceneId === undefined
+    ? node.value.costumeId ?? sceneCompanion.value.defaultCostumeId
+      ?? 'summer-travel'
+    : node.value.costumeId
     ?? sceneCompanion.value.defaultCostumeId
     ?? 'summer-travel',
 );
@@ -97,30 +137,84 @@ const availableCompanions = computed(() =>
   ),
 );
 const sceneBackground = computed(() => scene.value.background);
-const speaker = computed(() => {
-  const value = node.value.speaker.trim();
-  if (value.length === 0 || value === '旅伴' || value === 'companion') {
-    return sceneCompanion.value.name;
+const speaker = computed(() => storyLine.value.speakerName);
+const speakingKey = computed(() => {
+  const line = storyLine.value.line;
+  if (line.portraitCharacterId !== undefined) {
+    return line.portraitCharacterId;
   }
-  return value;
+  if (line.speaker === 'serin' || line.speaker === '瑟琳') {
+    return 'serin';
+  }
+  if (line.speaker === 'lia' || line.speaker === 'kind' || line.speaker === '莉娅') {
+    return 'lia';
+  }
+  return 'narration';
 });
-const expression = computed<CompanionExpression>(() => {
+const expressionFor = (
+  _companion: CompanionProfile,
+  speaking: boolean,
+): CompanionExpression => {
   if (props.run.status === 'completed') {
     return 'relief';
   }
-  switch (node.value.type) {
-    case 'choice':
-      return 'welcome';
-    case 'encounter':
-      return 'concern';
-    case 'camp':
-    case 'chapter-end':
-      return 'relief';
+  if (node.value.type === 'choice') {
+    return speaking ? 'welcome' : 'concern';
+  }
+  if (node.value.type === 'encounter') {
+    return 'concern';
+  }
+  if (node.value.type === 'camp' || node.value.type === 'chapter-end') {
+    return 'relief';
+  }
+  return speaking ? 'cheer' : 'concern';
+};
+const expression = computed<CompanionExpression>(() =>
+  expressionFor(
+    sceneCompanion.value,
+    speakingKey.value === sceneCompanion.value.id,
+  ),
+);
+const canAdvance = computed(
+  () => storyLine.value.advances
+    || node.value.type === 'dialogue'
+    || node.value.type === 'explore'
+    || node.value.type === 'camp',
+);
+const atLastLine = computed(() => lineIndex.value >= lastLineIndex(node.value));
+const stageLia = computed(() =>
+  runtimeCompanions.value.find((candidate) => candidate.id === 'lia')
+  ?? props.companion,
+);
+const stageSerin = computed(() =>
+  runtimeCompanions.value.find((candidate) => candidate.id === 'serin')
+  ?? props.companion,
+);
+const standingClass = (
+  companion: 'lia' | 'serin',
+): string => `standing-${storyLine.value.standing[companion]}`;
+const lineSpeakerClass = computed(() => {
+  if (speakingKey.value === 'lia') {
+    return 'speaker-lia';
+  }
+  if (speakingKey.value === 'serin') {
+    return 'speaker-serin';
+  }
+  return 'speaker-narration';
+});
+const propLabel = computed(() => {
+  switch (storyLine.value.line.stage?.prop) {
+    case 'match':
+      return '火柴停在灯芯前';
+    case 'map':
+      return '地图上的泥痕';
+    case 'red-string':
+      return '地图的红系绳';
     default:
-      return 'cheer';
+      return '';
   }
 });
-const sceneLabel = computed(() => {
+const sceneKicker = computed(() => {
   switch (node.value.type) {
     case 'encounter':
       return `${scene.value.label} · 遭遇`;
@@ -132,11 +226,6 @@ const sceneLabel = computed(() => {
       return scene.value.label;
   }
 });
-const canAdvance = computed(
-  () => node.value.type === 'dialogue'
-    || node.value.type === 'explore'
-    || node.value.type === 'camp',
-);
 const battleReady = computed(
   () => props.run.battleId !== undefined && props.session !== undefined,
 );
@@ -152,7 +241,7 @@ const encounterEnemyName = computed(
   () => node.value.encounterName ?? node.value.title,
 );
 const encounterBrief = computed(
-  () => node.value.encounterDescription ?? node.value.text,
+  () => node.value.encounterDescription ?? storyLine.value.line.text,
 );
 const primaryLabel = computed(() => {
   if (node.value.type === 'camp') {
@@ -164,12 +253,80 @@ const primaryLabel = computed(() => {
 function finishBattle(): void {
   emit('resolve-encounter');
 }
+
+function continueLine(): void {
+  if (storyLine.value.advances) {
+    lineIndex.value += 1;
+    emit('nextLine');
+    return;
+  }
+  if (node.value.type === 'camp' || node.value.type === 'dialogue' || node.value.type === 'explore') {
+    emit('advance');
+  }
+}
+
+function chooseLine(choiceId: string): void {
+  emit('choose', choiceId);
+}
+
+watch(
+  () => `${props.run.id}:${node.value.nodeId}`,
+  () => {
+    lineIndex.value = 0;
+  },
+  { immediate: true },
+);
+
+function handleDialogueKeydown(event: KeyboardEvent): void {
+  if (
+    event.isComposing
+    || event.repeat
+    || event.metaKey
+    || event.ctrlKey
+    || event.altKey
+  ) {
+    return;
+  }
+  const target = event.target;
+  const interactive = target instanceof HTMLElement
+    && target.closest('button, input, textarea, select, a, summary');
+  if (interactive !== null && interactive !== undefined) {
+    return;
+  }
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+  if (node.value.type === 'choice') {
+    if (atLastLine.value && storyLine.value.choices.length === 1) {
+      event.preventDefault();
+      chooseLine(storyLine.value.choices[0]!.choiceId);
+    }
+    return;
+  }
+  if (!canAdvance.value) {
+    return;
+  }
+  event.preventDefault();
+  continueLine();
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleDialogueKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleDialogueKeydown);
+});
 </script>
 
 <template>
   <section
     class="adventure-journey"
-    :class="`scene-${node.type}`"
+    :class="[
+      `scene-${node.type}`,
+      lineSpeakerClass,
+      { 'story-lines': node.lines !== undefined && node.lines.length > 0 },
+    ]"
     :data-run-id="run.id"
     :data-node-id="node.nodeId"
     :data-content-version="run.contentVersion"
@@ -199,13 +356,6 @@ function finishBattle(): void {
         </small>
       </div>
     </header>
-
-    <AdventureAmbientAudio
-      v-if="enableAudio && !battleReady && scene.ambientKey"
-      :enabled="enableAudio"
-      :ambient-key="scene.ambientKey"
-      :label="`${scene.label}环境音`"
-    />
 
     <div v-if="run.status === 'completed'" class="journey-complete" role="status">
       <Sparkles :size="22" aria-hidden="true" />
@@ -282,9 +432,39 @@ function finishBattle(): void {
         已找到固定战斗，正在恢复学习会话...
       </div>
 
-      <div v-else class="journey-stage">
+      <div
+        v-else
+        class="journey-stage"
+        :data-line-id="storyLine.line.lineId"
+        :data-speaker="storyLine.line.speaker"
+        :data-line-index="lineIndex"
+      >
         <div class="scene-atmosphere" aria-hidden="true">
           <span class="scene-light"></span>
+          <span
+            v-if="storyLine.line.stage?.light !== undefined"
+            class="stage-light"
+            :class="`light-${storyLine.line.stage.light}`"
+            aria-hidden="true"
+          ></span>
+          <span class="window-frame" aria-hidden="true">
+            <span class="window-lamp"></span>
+          </span>
+          <span
+            v-if="storyLine.line.stage?.prop === 'red-string'"
+            class="stage-prop red-string"
+            aria-hidden="true"
+          ></span>
+          <span
+            v-if="storyLine.line.stage?.command === 'close'"
+            class="stage-prop closed-latch"
+            aria-hidden="true"
+          ></span>
+          <span
+            v-if="storyLine.line.stage?.command === 'choice'"
+            class="stage-prop chalk-arrow"
+            aria-hidden="true"
+          ></span>
         </div>
 
         <div class="journey-copy">
@@ -292,25 +472,41 @@ function finishBattle(): void {
             <Swords v-if="node.type === 'encounter'" :size="16" aria-hidden="true" />
             <Flame v-else-if="node.type === 'camp'" :size="16" aria-hidden="true" />
             <BookOpen v-else :size="16" aria-hidden="true" />
-            {{ sceneLabel }}
+            {{ sceneKicker }}
           </p>
-          <p v-if="node.speaker" class="speaker">{{ speaker }}</p>
-          <p class="node-text">{{ node.text }}</p>
+          <p class="speaker">{{ speaker }}</p>
+          <p
+            class="node-text"
+            :title="storyLine.line.text"
+            @click="storyLine.advances ? continueLine() : undefined"
+          >
+            {{ storyLine.line.text }}
+          </p>
+          <p
+            v-if="propLabel.length > 0"
+            class="stage-prop-label"
+          >
+            可见细节 · {{ propLabel }}
+          </p>
 
-          <div v-if="node.type === 'choice'" class="choice-list" aria-label="剧情选项">
+          <div
+            v-if="node.type === 'choice' && atLastLine"
+            class="choice-list"
+            aria-label="剧情选项"
+          >
             <button
-              v-for="choice in node.choices"
+              v-for="choice in storyLine.choices"
               :key="choice.choiceId"
               type="button"
               :disabled="busy"
-              @click="emit('choose', choice.choiceId)"
+              @click="chooseLine(choice.choiceId)"
             >
               <span>{{ choice.label }}</span>
               <ArrowRight :size="17" aria-hidden="true" />
             </button>
           </div>
 
-          <div v-else-if="node.type === 'encounter'" class="encounter-actions">
+          <div v-if="node.type === 'encounter'" class="encounter-actions">
             <p>
               <strong>{{ encounterEnemyName }}</strong>
               {{ encounterBrief }}
@@ -364,22 +560,67 @@ function finishBattle(): void {
             type="button"
             class="journey-primary"
             :disabled="busy"
-            @click="emit('advance')"
+            @click="continueLine"
           >
-            {{ busy ? '正在保存检查点' : primaryLabel }}
+            {{
+              busy
+                ? '正在保存检查点'
+                : storyLine.advances
+                  ? '继续'
+                  : primaryLabel
+            }}
             <ArrowRight :size="18" aria-hidden="true" />
           </button>
+          <p v-if="!atLastLine" class="line-hint">
+            点击或按 Enter 继续本句。选择会在最后一句后出现。
+          </p>
         </div>
 
-        <div class="journey-companion">
+        <div class="journey-companion story-cast">
           <span class="lamp-glow" aria-hidden="true"></span>
+          <div
+            v-if="node.lines !== undefined && node.lines.length > 0"
+            class="dual-cast"
+          >
+            <div
+              class="cast-member cast-lia"
+              :class="[
+                standingClass('lia'),
+                { speaking: speakingKey === 'lia' },
+              ]"
+            >
+              <CompanionPortrait
+                :companion="stageLia"
+                :expression="expressionFor(stageLia, speakingKey === 'lia')"
+                :costume-id="stageLia.defaultCostumeId ?? 'summer-travel'"
+                :reduce-motion="reduceMotion"
+              />
+              <span class="cast-name">{{ stageLia.name }}</span>
+            </div>
+            <div
+              class="cast-member cast-serin"
+              :class="[
+                standingClass('serin'),
+                { speaking: speakingKey === 'serin' },
+              ]"
+            >
+              <CompanionPortrait
+                :companion="stageSerin"
+                :expression="expressionFor(stageSerin, speakingKey === 'serin')"
+                :costume-id="stageSerin.defaultCostumeId ?? 'summer-travel'"
+                :reduce-motion="reduceMotion"
+              />
+              <span class="cast-name">{{ stageSerin.name }}</span>
+            </div>
+          </div>
           <CompanionPortrait
+            v-else
             :companion="sceneCompanion"
             :expression="expression"
             :costume-id="sceneCostumeId"
             :reduce-motion="reduceMotion"
           />
-          <div class="companion-line">
+          <div v-if="node.lines === undefined" class="companion-line">
             <span>{{ sceneCompanion.name }} · {{ sceneCompanion.epithet }}</span>
             <p>{{ sceneCompanion.dialogue.training }}</p>
           </div>
@@ -561,6 +802,261 @@ function finishBattle(): void {
   border-radius: 50%;
   background: radial-gradient(circle, rgb(255 212 139 / 28%), transparent 68%);
   filter: blur(10px);
+}
+
+.story-lines .journey-stage {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: min(720px, 76vh);
+}
+
+.story-lines .journey-copy {
+  justify-content: start;
+  padding-bottom: min(23vh, 220px);
+}
+
+.story-lines .journey-copy .node-text {
+  max-width: 46rem;
+  min-height: 5.2em;
+  border-left: 2px solid rgb(224 194 120 / 52%);
+  padding: 14px 0 0 18px;
+  background:
+    linear-gradient(90deg, rgb(14 11 12 / 74%), transparent 84%);
+  text-shadow: 0 2px 16px rgb(0 0 0 / 72%);
+}
+
+.stage-light {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.light-window-bell {
+  top: 10%;
+  right: 9%;
+  width: 36%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(232 192 118 / 26%);
+  background: radial-gradient(circle, rgb(255 209 130 / 10%), transparent 64%);
+}
+
+.light-window-lamp {
+  top: 14%;
+  right: 7%;
+  width: 38%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgb(255 203 116 / 34%), transparent 67%);
+  filter: blur(4px);
+}
+
+.light-campfire {
+  right: 14%;
+  bottom: 8%;
+  width: 56%;
+  height: 38%;
+  background: radial-gradient(ellipse, rgb(255 155 65 / 28%), transparent 68%);
+}
+
+.window-frame {
+  position: absolute;
+  top: 9%;
+  right: 7%;
+  width: 31%;
+  height: 35%;
+  border: 1px solid rgb(228 189 117 / 18%);
+  box-shadow:
+    inset 0 0 40px rgb(255 206 122 / 6%),
+    0 0 26px rgb(255 206 122 / 8%);
+  pointer-events: none;
+}
+
+.window-frame::before,
+.window-frame::after {
+  position: absolute;
+  background: rgb(228 189 117 / 15%);
+  content: "";
+}
+
+.window-frame::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.window-frame::after {
+  right: 0;
+  left: 0;
+  top: 52%;
+  height: 1px;
+}
+
+.window-lamp {
+  position: absolute;
+  bottom: 13%;
+  left: 18%;
+  width: 12px;
+  height: 16px;
+  border-radius: 50% 50% 42% 42%;
+  background: #ffd78f;
+  box-shadow:
+    0 0 16px #ffcb75,
+    0 0 44px rgb(255 190 90 / 46%);
+}
+
+.stage-prop {
+  position: absolute;
+  pointer-events: none;
+}
+
+.red-string {
+  top: 30%;
+  right: 14%;
+  width: 7px;
+  height: 28%;
+  border-radius: 60% 30% 50% 40%;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      #b74f42 0 8px,
+      #8b302b 8px 12px
+    );
+  box-shadow: 0 0 8px rgb(183 79 66 / 38%);
+  transform: rotate(11deg);
+}
+
+.closed-latch {
+  right: 32%;
+  bottom: 37%;
+  width: 46px;
+  height: 8px;
+  border-radius: 3px;
+  background: #8b6b43;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 54%);
+}
+
+.chalk-arrow {
+  right: 21%;
+  bottom: 24%;
+  width: 48px;
+  height: 3px;
+  border-radius: 2px;
+  background: #d8c69f;
+  transform: rotate(-24deg);
+}
+
+.chalk-arrow::after {
+  position: absolute;
+  right: -1px;
+  top: -5px;
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid #d8c69f;
+  border-right: 2px solid #d8c69f;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.stage-prop-label,
+.line-hint {
+  margin: 0;
+  color: #d3c1a0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.stage-prop-label {
+  width: fit-content;
+  border: 1px solid rgb(230 199 134 / 28%);
+  border-radius: 4px;
+  padding: 4px 8px;
+  background: rgb(18 14 14 / 58%);
+}
+
+.story-lines .journey-companion {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  pointer-events: none;
+}
+
+.dual-cast {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cast-member {
+  position: absolute;
+  bottom: 22%;
+  height: min(500px, 63vh);
+  transition:
+    transform 240ms ease-out,
+    filter 240ms ease-out,
+    opacity 240ms ease-out;
+}
+
+.cast-member :deep(.companion-portrait) {
+  height: 100%;
+}
+
+.cast-member .cast-name {
+  position: absolute;
+  bottom: 4%;
+  left: 50%;
+  border: 1px solid rgb(225 192 122 / 24%);
+  border-radius: 12px;
+  padding: 3px 9px;
+  background: rgb(14 11 12 / 72%);
+  color: #e7d2aa;
+  font-size: 0.68rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.cast-lia.standing-left {
+  left: 2%;
+}
+
+.cast-lia.standing-right {
+  right: 23%;
+  left: auto;
+}
+
+.cast-lia.standing-far-right {
+  right: 2%;
+  left: auto;
+}
+
+.cast-serin.standing-left {
+  left: 2%;
+  right: auto;
+}
+
+.cast-serin.standing-right {
+  right: 2%;
+  left: auto;
+}
+
+.cast-serin.standing-far-right {
+  right: 12%;
+  left: auto;
+}
+
+.cast-member.speaking {
+  filter: drop-shadow(0 0 18px rgb(255 205 117 / 36%));
+  transform: translateY(-6px) scale(1.025);
+  z-index: 2;
+}
+
+.cast-member:not(.speaking) {
+  filter: brightness(0.76) saturate(0.86);
+}
+
+.speaker-narration .cast-member:not(.speaking) {
+  filter: brightness(0.86) saturate(0.92);
 }
 
 .journey-copy {

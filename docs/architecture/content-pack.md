@@ -23,7 +23,8 @@ H5-07 落地 GM 草稿只读预览、不可变版本发布、共享目录和归�
 主线三章加潮声海湾支线可编辑源与成品包位于 `content/warm-lantern/`。可编辑
 JSON/TSV 使用普通 Git，`warm-lantern-1.0.0.fmbook` 保留第一章历史版本，
 `warm-lantern-2.0.0.fmbook` 保留 H5-03 三章历史版本，
-`warm-lantern-3.0.0.fmbook` 提供当前完整支线并使用 Git LFS；`旅伴` 说话者在
+`warm-lantern-3.0.0.fmbook` 保留潮声海湾支线，`warm-lantern-4.0.0.fmbook`
+提供“溪桥之夜”逐句舞台、路线开局修正与营火回收，并使用 Git LFS；`旅伴` 说话者在
 运行时映射到当前带队伙伴，`portraitCharacterId`、`sceneId` 和 `costumeId`
 可覆盖剧情节点的指定立绘、背景和服装。
 

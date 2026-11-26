@@ -24,7 +24,8 @@ public record BattleState(
         int intentIndex,
         String terminal,
         LearningTask learningTask,
-        Companion companion) {
+        Companion companion,
+        List<RouteModifier> routeModifiers) {
 
     public record Party(int hp, int maxHp, int block) {
     }
@@ -68,5 +69,10 @@ public record BattleState(
         public Companion(String key, boolean skillUsed) {
             this(key, skillUsed, null, null, null, 0);
         }
+    }
+
+    public record RouteModifier(
+            String type,
+            int amount) {
     }
 }

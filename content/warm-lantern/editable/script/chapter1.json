@@ -1,0 +1,105 @@
+{
+  "chapterId": "chapter-1",
+  "title": "暖灯与失语之森",
+  "lines": [
+    {
+      "lineId": "c1-inn-001",
+      "speaker": "narration",
+      "text": "打烊后的旅店只剩炭火噼啪。窗外的雾里响起铜铃，一下，两下，三下。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "narration",
+        "light": "window-bell"
+      },
+      "sound": "bell"
+    },
+    {
+      "lineId": "c1-inn-002",
+      "speaker": "kind",
+      "text": "莉娅手里的火柴已经划亮，停在小灯芯前，迟迟没有落下。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "lia",
+        "prop": "match"
+      },
+      "sound": "match"
+    },
+    {
+      "lineId": "c1-inn-003",
+      "speaker": "kind",
+      "text": "瑟琳摊开地图。她的指腹上沾着一条新泥痕，正好落在溪桥的第三截桥栏。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "serin",
+        "prop": "map"
+      }
+    },
+    {
+      "lineId": "c1-window-001",
+      "speaker": "lia",
+      "portraitCharacterId": "lia",
+      "text": "去年我走丢的时候，从桥上只看得见这一扇窗。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "lia",
+        "lia": "right",
+        "serin": "far-right",
+        "light": "window-lamp"
+      }
+    },
+    {
+      "lineId": "c1-window-002",
+      "speaker": "serin",
+      "portraitCharacterId": "serin",
+      "text": "我下午摸过桥栏。第三截绳子，拉一下就断。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "serin",
+        "lia": "right",
+        "serin": "left",
+        "prop": "red-string"
+      },
+      "sound": "paper"
+    },
+    {
+      "lineId": "c1-window-003",
+      "speaker": "serin",
+      "portraitCharacterId": "serin",
+      "text": "她把手心摊开。一根麻丝嵌在指节上，像从桥栏上带回来的一小截夜。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "serin",
+        "lia": "right",
+        "serin": "left",
+        "prop": "red-string"
+      }
+    },
+    {
+      "lineId": "c1-window-004",
+      "speaker": "lia",
+      "portraitCharacterId": "lia",
+      "text": "祖母会在雾夜朝桥上挂灯。最后一盏好灯，应该留给晚归的人。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "lia",
+        "lia": "right",
+        "serin": "left",
+        "light": "window-lamp",
+        "command": "close"
+      },
+      "sound": "lamp"
+    },
+    {
+      "lineId": "c1-window-005",
+      "speaker": "kind",
+      "text": "窗外又起一阵雾。你们今晚要走的那条路，正从窗下伸向溪桥。",
+      "stage": {
+        "sceneId": "inn-warm-lantern",
+        "focus": "window",
+        "lia": "right",
+        "serin": "left",
+        "command": "choice"
+      }
+    }
+  ]
+}

@@ -78,6 +78,40 @@ public class AdventurePackageReader {
                     text(choice, "label", "继续"),
                     text(choice, "targetNodeId", "")));
         }
+        List<AdventureLine> lines = new ArrayList<>();
+        for (JsonNode line : node.path("lines")) {
+            if (!line.isObject()) {
+                continue;
+            }
+            lines.add(new AdventureLine(
+                    text(line, "lineId", ""),
+                    text(line, "speaker", ""),
+                    text(line, "portraitCharacterId", null),
+                    text(line, "text", ""),
+                    text(line.path("stage"), "sceneId", null),
+                    text(line.path("stage"), "focus", null),
+                    text(line.path("stage"), "lia", null),
+                    text(line.path("stage"), "serin", null),
+                    text(line.path("stage"), "prop", null),
+                    text(line.path("stage"), "light", null),
+                    text(line.path("stage"), "command", null),
+                    text(line, "sound", null)));
+        }
+        Map<String, OpeningModifier> openingModifiers = new LinkedHashMap<>();
+        JsonNode opening = node.path("openingModifiers");
+        if (opening.isObject()) {
+            opening.properties().forEach(entry -> {
+                JsonNode modifier = entry.getValue();
+                if (modifier.isObject()) {
+                    openingModifiers.put(
+                            entry.getKey(),
+                            new OpeningModifier(
+                                    text(modifier, "route", entry.getKey()),
+                                    text(modifier, "type", ""),
+                                    modifier.path("amount").asInt(0)));
+                }
+            });
+        }
         return new AdventureNode(
                 text(node, "nodeId", ""),
                 chapterId,
@@ -101,7 +135,9 @@ public class AdventurePackageReader {
                 text(node, "endingId", "main"),
                 text(node, "endingTitle", null),
                 stringList(node.path("inheritedFlags")),
-                List.copyOf(choices));
+                List.copyOf(choices),
+                List.copyOf(lines),
+                Map.copyOf(openingModifiers));
     }
 
     private Map<String, AdventureCard> readCards(Path path) throws IOException {
@@ -312,7 +348,30 @@ public class AdventurePackageReader {
             String endingId,
             String endingTitle,
             List<String> inheritedFlags,
-            List<AdventureChoice> choices) {
+            List<AdventureChoice> choices,
+            List<AdventureLine> lines,
+            Map<String, OpeningModifier> openingModifiers) {
+    }
+
+    public record OpeningModifier(
+            String route,
+            String type,
+            int amount) {
+    }
+
+    public record AdventureLine(
+            String lineId,
+            String speaker,
+            String portraitCharacterId,
+            String text,
+            String sceneId,
+            String focus,
+            String lia,
+            String serin,
+            String prop,
+            String light,
+            String command,
+            String sound) {
     }
 
     public record AdventureChoice(

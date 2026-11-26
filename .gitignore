@@ -18,3 +18,4 @@ server/backups/
 **/test-results/
 **/playwright-report/
 **/coverage/
+web/.vitest/

@@ -433,6 +433,32 @@ public class ContentPackageValidator {
                 if (node.has("encounterDescription")) {
                     requiredText(node, "encounterDescription", 2000);
                 }
+                if (node.has("openingModifiers")) {
+                    JsonNode openingModifiers = node.path("openingModifiers");
+                    if (!openingModifiers.isObject()) {
+                        throw invalid("openingModifiers 必须是对象：" + nodeId);
+                    }
+                    for (JsonNode modifierNode : openingModifiers.values()) {
+                        String route = requireTextNode(
+                                modifierNode.path("route"),
+                                "openingModifiers.route");
+                        String modifierType = requireTextNode(
+                                modifierNode.path("type"),
+                                "openingModifiers.type");
+                        if (!Set.of("block-first-turn", "first-attack-damage")
+                                .contains(modifierType)) {
+                            throw invalid("未知开局修正：" + modifierType);
+                        }
+                        int amount = modifierNode.path("amount").asInt(0);
+                        if (amount < 1 || amount > 20) {
+                            throw invalid("开局修正数值必须在 1 到 20 之间");
+                        }
+                        if (!Set.of("keep-lamp", "carry-lamp")
+                                .contains(route)) {
+                            throw invalid("未知路线开局修正：" + route);
+                        }
+                    }
+                }
                 validateRecollectionFields(node);
                 if (node.has("inheritedFlags")) {
                     JsonNode inheritedFlags = requiredArray(node, "inheritedFlags");

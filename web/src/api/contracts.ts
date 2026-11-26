@@ -291,6 +291,25 @@ export interface AdventureChoiceView {
   label: string;
 }
 
+export interface AdventureStageCue {
+  sceneId?: string;
+  focus?: 'lia' | 'serin' | 'fina' | 'narration' | 'window';
+  lia?: 'left' | 'right' | 'far-right';
+  serin?: 'left' | 'right' | 'far-right';
+  prop?: 'match' | 'map' | 'red-string';
+  light?: 'window-bell' | 'window-lamp' | 'campfire';
+  command?: 'close' | 'choice';
+}
+
+export interface AdventureLineView {
+  lineId: string;
+  speaker: string;
+  portraitCharacterId?: string;
+  text: string;
+  stage?: AdventureStageCue;
+  sound?: string;
+}
+
 export interface AdventureNodeView {
   nodeId: string;
   chapterId: string;
@@ -305,6 +324,7 @@ export interface AdventureNodeView {
   encounterName?: string;
   encounterDescription?: string;
   choices: AdventureChoiceView[];
+  lines?: AdventureLineView[];
 }
 
 export interface AdventureCharacterView {

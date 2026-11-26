@@ -1,13 +1,14 @@
 {
   "bindings": [
     {
-      "nodeId": "inn.preparation",
+      "nodeId": "bridge.kept",
       "wordKeys": [
-        "lantern"
+        "lantern",
+        "lit"
       ]
     },
     {
-      "nodeId": "forest.signpost",
+      "nodeId": "bridge.carried",
       "wordKeys": [
         "forest",
         "bridge"
@@ -16,8 +17,8 @@
     {
       "nodeId": "camp.letter",
       "wordKeys": [
-        "promise",
         "guardian",
+        "promise",
         "campfire"
       ]
     },

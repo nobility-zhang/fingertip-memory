@@ -485,8 +485,10 @@ public class AdventureService {
                         row.companionKey(),
                         TUTORIAL_BATTLE_SEED,
                         false,
-                        readDeck(row.deckJson())),
-                companionSkill);
+                        readDeck(row.deckJson()),
+                        openingRouteModifiers(row, node)),
+                companionSkill,
+                openingRouteModifiers(row, node));
         long now = clock.instant().toEpochMilli();
         if (adventureMapper.bindBattle(
                 ownerId,
@@ -592,7 +594,12 @@ public class AdventureService {
         long now = clock.instant().toEpochMilli();
         switch (request.action()) {
             case "advance" -> nextNodeId = advanceTarget(node);
-            case "choose" -> nextNodeId = choiceTarget(node, request.choiceId());
+            case "choose" -> {
+                nextNodeId = choiceTarget(node, request.choiceId());
+                if (routeFlag(request.choiceId()) != null) {
+                    flags.put(routeFlag(request.choiceId()), true);
+                }
+            }
             case "select-companion" -> {
                 if (!"camp".equals(node.type()) || request.companionKey() == null) {
                     throw conflict(
@@ -667,6 +674,11 @@ public class AdventureService {
                     String victoryNodeId = node.victoryNodeId() != null
                             ? node.victoryNodeId()
                             : node.nextNodeId();
+                    if (victoryNodeId != null && content.nodes().containsKey(
+                            victoryNodeId + "-carried")
+                            && Boolean.TRUE.equals(flags.get("route.carried"))) {
+                        victoryNodeId += "-carried";
+                    }
                     AdventureRewardOfferRow offer = createRewardOffer(
                             ownerId,
                             row,
@@ -1123,6 +1135,48 @@ public class AdventureService {
         return node.nextNodeId();
     }
 
+    private List<BattleDtos.RouteModifier> openingRouteModifiers(
+            AdventureRunRow run,
+            AdventurePackageReader.AdventureNode node) {
+        if (node.openingModifiers().isEmpty()) {
+            return List.of();
+        }
+        Map<String, Boolean> flags = readFlags(run.flagsJson());
+        String route = null;
+        if (Boolean.TRUE.equals(flags.get("route.carried"))) {
+            route = "carry-lamp";
+        } else if (Boolean.TRUE.equals(flags.get("route.lamp"))) {
+            route = "keep-lamp";
+        }
+        if (route == null) {
+            return List.of();
+        }
+        List<BattleDtos.RouteModifier> selected = new ArrayList<>();
+        for (AdventurePackageReader.OpeningModifier modifier
+                : node.openingModifiers().values()) {
+            if (route.equals(modifier.route())) {
+                selected.add(new BattleDtos.RouteModifier(
+                        modifier.type(),
+                        modifier.amount()));
+            }
+        }
+        return List.copyOf(selected);
+    }
+
+    private String routeFlag(String choiceId) {
+        if (choiceId == null) {
+            return null;
+        }
+        String route = choiceId.toLowerCase(java.util.Locale.ROOT);
+        if (route.contains("keep-lamp") || route.contains("keep_lamp")) {
+            return "route.lamp";
+        }
+        if (route.contains("carry-lamp") || route.contains("carry_lamp")) {
+            return "route.carried";
+        }
+        return null;
+    }
+
     private String choiceTarget(
             AdventurePackageReader.AdventureNode node,
             String choiceId) {
@@ -1205,6 +1259,22 @@ public class AdventureService {
                                 .map(choice -> new AdventureDtos.Choice(
                                         choice.choiceId(),
                                         choice.label()))
+                                .toList(),
+                        node.lines().stream()
+                                .map(line -> new AdventureDtos.Line(
+                                        line.lineId(),
+                                        line.speaker(),
+                                        line.portraitCharacterId(),
+                                        line.text(),
+                                        new AdventureDtos.Stage(
+                                                line.sceneId(),
+                                                line.focus(),
+                                                line.lia(),
+                                                line.serin(),
+                                                line.prop(),
+                                                line.light(),
+                                                line.command()),
+                                        line.sound()))
                                 .toList()),
                 readDeck(row.deckJson()),
                 listUnlockedCompanions(row.ownerId()),

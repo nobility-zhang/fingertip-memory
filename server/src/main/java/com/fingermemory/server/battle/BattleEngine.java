@@ -47,6 +47,14 @@ public class BattleEngine {
                 command.studyItemId(),
                 false,
                 null);
+        List<BattleState.RouteModifier> routeModifiers =
+                command.routeModifiers() == null
+                        ? List.of()
+                        : command.routeModifiers().stream()
+                                .map(modifier -> new BattleState.RouteModifier(
+                                        modifier.type(),
+                                        modifier.amount()))
+                                .toList();
         BattleState initial = new BattleState(
                 BattleCatalog.SCHEMA_VERSION,
                 BattleCatalog.RULES_VERSION,
@@ -79,7 +87,8 @@ public class BattleEngine {
                         companionSkill.name(),
                         companionSkill.description(),
                         companionSkill.type(),
-                        companionSkill.amount()));
+                        companionSkill.amount()),
+                routeModifiers);
         List<ObjectNode> events = new ArrayList<>();
         ObjectNode started = event("battle-started");
         started.put("turnId", 1);
@@ -87,7 +96,22 @@ public class BattleEngine {
         events.add(started);
         DrawResult draw = drawCards(initial, BattleCatalog.TURN_DRAW);
         events.addAll(draw.events());
-        return new BattleTransition(draw.state(), List.copyOf(events));
+        BattleState opened = copy(
+                draw.state(),
+                draw.state().stateVersion(),
+                draw.state().party(),
+                draw.state().enemies(),
+                0,
+                draw.state().drawPile(),
+                draw.state().drawCursor(),
+                draw.state().hand(),
+                draw.state().discardPile(),
+                draw.state().exhaustPile(),
+                "learning",
+                draw.state().learningTask(),
+                draw.state().companion(),
+                draw.state().routeModifiers());
+        return new BattleTransition(opened, List.copyOf(events));
     }
 
     public BattleTransition claimLearning(
@@ -108,10 +132,32 @@ public class BattleEngine {
                 task.studyItemId(),
                 true,
                 submissionId);
+        List<ObjectNode> events = new ArrayList<>();
+        BattleState.Party claimedParty = state.party();
+        List<BattleState.RouteModifier> claimedModifiers =
+                state.routeModifiers();
+        if (state.routeModifiers() != null
+                && state.routeModifiers().stream().anyMatch(
+                        modifier -> "block-first-turn".equals(modifier.type()))) {
+            int openingBlock = state.routeModifiers().stream()
+                    .filter(modifier ->
+                            "block-first-turn".equals(modifier.type()))
+                    .mapToInt(BattleState.RouteModifier::amount)
+                    .sum();
+            claimedParty = new BattleState.Party(
+                    state.party().hp(),
+                    state.party().maxHp(),
+                    state.party().block() + openingBlock);
+            claimedModifiers = consumeOpeningBlock(state);
+            ObjectNode routeBlock = event("route-opening-bonus");
+            routeBlock.put("type", "block-first-turn");
+            routeBlock.put("amount", openingBlock);
+            events.add(routeBlock);
+        }
         BattleState next = copy(
                 state,
                 state.stateVersion() + 1,
-                state.party(),
+                claimedParty,
                 state.enemies(),
                 BattleCatalog.BASE_ENERGY,
                 state.drawPile(),
@@ -121,7 +167,8 @@ public class BattleEngine {
                 state.exhaustPile(),
                 "player-action",
                 grantedTask,
-                state.companion());
+                state.companion(),
+                claimedModifiers);
         ObjectNode awarded = event("learning-energy-awarded");
         awarded.put("taskId", task.taskId());
         awarded.put("submissionId", submissionId);
@@ -129,7 +176,9 @@ public class BattleEngine {
         ObjectNode phase = event("turn-phase-changed");
         phase.put("from", "learning");
         phase.put("to", "player-action");
-        return new BattleTransition(next, List.of(awarded, phase));
+        events.add(awarded);
+        events.add(phase);
+        return new BattleTransition(next, List.copyOf(events));
     }
 
     public BattleTransition playCard(
@@ -181,9 +230,20 @@ public class BattleEngine {
                 case "damage" -> {
                     BattleState.Enemy enemy = findLivingEnemy(enemies, targetId);
                     if (enemy != null) {
-                        DamageResult damage = damageEnemy(enemy, effect.amount());
+                        int attackBonus = nextAttackBonus(
+                                state.routeModifiers(),
+                                state.turnId());
+                        DamageResult damage = damageEnemy(
+                                enemy,
+                                effect.amount() + attackBonus);
                         replaceEnemy(enemies, damage.enemy());
                         events.add(damage.event("card"));
+                        if (attackBonus > 0) {
+                            ObjectNode routeBonus = event("route-opening-bonus");
+                            routeBonus.put("type", "first-attack-damage");
+                            routeBonus.put("amount", attackBonus);
+                            events.add(routeBonus);
+                        }
                     }
                 }
                 case "block" -> {
@@ -266,7 +326,11 @@ public class BattleEngine {
                 exhaust,
                 state.phase(),
                 state.learningTask(),
-                state.companion());
+                state.companion(),
+                consumeAttackBonus(
+                        state.routeModifiers(),
+                        state.turnId(),
+                        definition));
         next = applyTerminal(next, events);
         return new BattleTransition(next, List.copyOf(events));
     }
@@ -582,7 +646,8 @@ public class BattleEngine {
                 nextIntentIndex,
                 null,
                 draw.state().learningTask(),
-                draw.state().companion());
+                draw.state().companion(),
+                draw.state().routeModifiers());
         return new BattleTransition(next, List.copyOf(events));
     }
 
@@ -656,6 +721,38 @@ public class BattleEngine {
             String phase,
             BattleState.LearningTask learningTask,
             BattleState.Companion companion) {
+        return copy(
+                source,
+                stateVersion,
+                party,
+                enemies,
+                energy,
+                drawPile,
+                drawCursor,
+                hand,
+                discard,
+                exhaust,
+                phase,
+                learningTask,
+                companion,
+                source.routeModifiers());
+    }
+
+    private BattleState copy(
+            BattleState source,
+            long stateVersion,
+            BattleState.Party party,
+            List<BattleState.Enemy> enemies,
+            int energy,
+            List<BattleState.CardInstance> drawPile,
+            int drawCursor,
+            List<BattleState.CardInstance> hand,
+            List<BattleState.CardInstance> discard,
+            List<BattleState.CardInstance> exhaust,
+            String phase,
+            BattleState.LearningTask learningTask,
+            BattleState.Companion companion,
+            List<BattleState.RouteModifier> routeModifiers) {
         return new BattleState(
                 source.schemaVersion(),
                 source.battleRulesVersion(),
@@ -678,7 +775,46 @@ public class BattleEngine {
                 source.intentIndex(),
                 source.terminal(),
                 learningTask,
-                companion);
+                companion,
+                routeModifiers);
+    }
+
+    private List<BattleState.RouteModifier> consumeOpeningBlock(
+            BattleState state) {
+        return state.routeModifiers() == null
+                ? List.of()
+                : state.routeModifiers().stream()
+                        .filter(modifier ->
+                                !"block-first-turn".equals(modifier.type()))
+                        .toList();
+    }
+
+    private List<BattleState.RouteModifier> consumeAttackBonus(
+            List<BattleState.RouteModifier> modifiers,
+            int turnId,
+            BattleCatalog.CardDefinition card) {
+        if (modifiers == null || modifiers.isEmpty()
+                || turnId != 1
+                || !"enemy".equals(card.target())) {
+            return modifiers == null ? List.of() : modifiers;
+        }
+        return modifiers.stream()
+                .filter(modifier ->
+                        !"first-attack-damage".equals(modifier.type()))
+                .toList();
+    }
+
+    private int nextAttackBonus(
+            List<BattleState.RouteModifier> modifiers,
+            int turnId) {
+        if (modifiers == null || turnId != 1) {
+            return 0;
+        }
+        return modifiers.stream()
+                .filter(modifier ->
+                        "first-attack-damage".equals(modifier.type()))
+                .mapToInt(BattleState.RouteModifier::amount)
+                .sum();
     }
 
     private BattleState applyTerminal(BattleState state, List<ObjectNode> events) {
@@ -713,7 +849,8 @@ public class BattleEngine {
                 state.intentIndex(),
                 terminal,
                 state.learningTask(),
-                state.companion());
+                state.companion(),
+                state.routeModifiers());
         ObjectNode event = event("battle-ended");
         event.put("result", terminal);
         events.add(event);
@@ -842,7 +979,8 @@ public class BattleEngine {
             Long seed,
             boolean shuffle,
             List<String> deck,
-            CompanionSkillDefinition companionSkill) {
+            CompanionSkillDefinition companionSkill,
+            List<RouteModifierDefinition> routeModifiers) {
 
         public CreateBattleCommand(
                 String battleId,
@@ -863,6 +1001,7 @@ public class BattleEngine {
                     seed,
                     shuffle,
                     null,
+                    null,
                     null);
         }
     }
@@ -870,6 +1009,11 @@ public class BattleEngine {
     public record CompanionSkillDefinition(
             String name,
             String description,
+            String type,
+            int amount) {
+    }
+
+    public record RouteModifierDefinition(
             String type,
             int amount) {
     }

@@ -1,0 +1,31 @@
+{
+  "chapterId": "chapter-3",
+  "title": "古树之心与回信",
+  "lines": [
+    {
+      "lineId": "c3-arrival-001",
+      "speaker": "fina",
+      "portraitCharacterId": "fina",
+      "text": "树根像道路一样铺开。菲妮的罗盘第一次同时指向两个方向，她却先把手按在树心上。",
+      "stage": {
+        "sceneId": "forest-path",
+        "focus": "fina",
+        "lia": "left",
+        "serin": "right"
+      }
+    },
+    {
+      "lineId": "c3-camp-001",
+      "speaker": "serin",
+      "portraitCharacterId": "serin",
+      "text": "回信没有写终点，只写着：“灯还亮着，就有人会回来。”瑟琳把这句话抄在地图背面，墨迹压住了今晚的营火。",
+      "stage": {
+        "sceneId": "camp-fire",
+        "focus": "serin",
+        "lia": "left",
+        "serin": "right",
+        "light": "campfire"
+      }
+    }
+  ]
+}

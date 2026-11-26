@@ -9,40 +9,242 @@
           "type": "choice",
           "title": "暖灯旅店",
           "text": "信纸边缘又淡了一角。旅伴把暖灯放在桌沿，替你留出靠近炉火的位置。",
+          "sceneId": "inn-warm-lantern",
+          "lines": [
+            {
+              "lineId": "c1-inn-001",
+              "speaker": "narration",
+              "text": "打烊后的旅店只剩炭火噼啪。窗外的雾里响起铜铃，一下，两下，三下。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "narration",
+                "light": "window-bell"
+              },
+              "sound": "bell"
+            },
+            {
+              "lineId": "c1-inn-002",
+              "speaker": "kind",
+              "text": "莉娅手里的火柴已经划亮，停在小灯芯前，迟迟没有落下。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "lia",
+                "prop": "match"
+              },
+              "sound": "match"
+            },
+            {
+              "lineId": "c1-inn-003",
+              "speaker": "kind",
+              "text": "瑟琳摊开地图。她的指腹上沾着一条新泥痕，正好落在溪桥的第三截桥栏。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "serin",
+                "prop": "map"
+              }
+            },
+            {
+              "lineId": "c1-window-001",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "去年我走丢的时候，从桥上只看得见这一扇窗。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "lia",
+                "lia": "right",
+                "serin": "far-right",
+                "light": "window-lamp"
+              }
+            },
+            {
+              "lineId": "c1-window-002",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "我下午摸过桥栏。第三截绳子，拉一下就断。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "serin",
+                "lia": "right",
+                "serin": "left",
+                "prop": "red-string"
+              },
+              "sound": "paper"
+            },
+            {
+              "lineId": "c1-window-003",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "她把手心摊开。一根麻丝嵌在指节上，像从桥栏上带回来的一小截夜。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "serin",
+                "lia": "right",
+                "serin": "left",
+                "prop": "red-string"
+              }
+            },
+            {
+              "lineId": "c1-window-004",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "祖母会在雾夜朝桥上挂灯。最后一盏好灯，应该留给晚归的人。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "lia",
+                "lia": "right",
+                "serin": "left",
+                "light": "window-lamp",
+                "command": "close"
+              },
+              "sound": "lamp"
+            },
+            {
+              "lineId": "c1-window-005",
+              "speaker": "kind",
+              "text": "窗外又起一阵雾。你们今晚要走的那条路，正从窗下伸向溪桥。",
+              "stage": {
+                "sceneId": "inn-warm-lantern",
+                "focus": "window",
+                "lia": "right",
+                "serin": "left",
+                "command": "choice"
+              }
+            }
+          ],
           "choices": [
             {
-              "choiceId": "prepare",
-              "label": "拿起暖灯，准备出发",
-              "targetNodeId": "inn.preparation"
+              "choiceId": "keep-lamp",
+              "label": "把灯留在窗边 · 瑟琳用红系绳护住桥栏",
+              "targetNodeId": "bridge.kept"
+            },
+            {
+              "choiceId": "carry-lamp",
+              "label": "请莉娅提灯同行 · 窗板上留下回家的粉笔箭",
+              "targetNodeId": "bridge.carried"
             }
           ]
         },
         {
-          "nodeId": "inn.preparation",
-          "type": "dialogue",
-          "speaker": "旅伴",
-          "title": "临行前的笔记",
-          "text": "旅伴在便笺上写下 lantern，又把纸角折进你的地图。今晚先记住它，再让灯光替你引路。",
-          "nextNodeId": "forest.signpost"
+          "nodeId": "bridge.kept",
+          "type": "explore",
+          "title": "雾中的暗桥",
+          "speaker": "瑟琳",
+          "portraitCharacterId": "serin",
+          "sceneId": "bridge-guardian",
+          "text": "窗闩抵紧的声音在身后合上。桥上摸不到灯，只有瑟琳把红系绳一圈圈缠上了掌心。",
+          "lines": [
+            {
+              "lineId": "c1-kept-001",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "窗闩抵紧的声音在身后合上。桥上摸不到灯，只有瑟琳把红系绳一圈圈缠上了掌心。",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right"
+              }
+            },
+            {
+              "lineId": "c1-kept-002",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "我回头还看得见那扇窗。只要我们走稳，灯就会一直给后面的人留着。",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right",
+                "light": "window-lamp"
+              }
+            },
+            {
+              "lineId": "c1-kept-003",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "第一回合，我会先用系绳护住你。桥栏的绳结不会白摸。",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right",
+                "prop": "red-string"
+              }
+            }
+          ],
+          "nextNodeId": "bridge.guardian"
         },
         {
-          "nodeId": "forest.signpost",
-          "type": "choice",
-          "title": "失语之森",
-          "text": "两道路痕都通向溪桥。雾里有木头受压的轻响，也有守卫缓慢的呼吸声。",
-          "choices": [
+          "nodeId": "bridge.carried",
+          "type": "explore",
+          "title": "灯下的亮桥",
+          "speaker": "莉娅",
+          "portraitCharacterId": "lia",
+          "sceneId": "bridge-guardian",
+          "text": "莉娅把灯递到你手里，转身在窗板上画了一支回家的箭。灯下的路条还缺一个词。",
+          "lines": [
             {
-              "choiceId": "cross",
-              "label": "沿提灯照亮的旧路前进",
-              "targetNodeId": "bridge.guardian"
+              "lineId": "c1-carried-001",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "莉娅把灯递到你手里，转身在窗板上画了一支回家的箭。残路条上写着：Keep the ___ lit until dawn.",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right",
+                "light": "window-lamp",
+                "command": "choice"
+              }
+            },
+            {
+              "lineId": "c1-carried-002",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "第三颗铆钉是松的。第一下别急着收手，照那里打，桥雾会慢半拍。",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right",
+                "prop": "red-string"
+              }
+            },
+            {
+              "lineId": "c1-carried-003",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "窗边现在是黑的。但箭头还亮着，回去时我们会认得路。灯下的路条写着：Keep the ___ lit until dawn.",
+              "stage": {
+                "sceneId": "bridge-guardian",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right"
+              }
             }
-          ]
+          ],
+          "nextNodeId": "bridge.guardian"
         },
         {
           "nodeId": "bridge.guardian",
           "type": "encounter",
           "title": "雾中溪桥",
-          "text": "桥雾聚成守卫。它没有夺走道路，只要求你们用真实的回忆换取每一次行动。",
+          "text": "桥雾聚成守卫。它抬臂前，肩上的第三颗铆钉先响了一声。",
+          "sceneId": "bridge-guardian",
+          "encounterName": "桥雾守卫",
+          "encounterDescription": "留灯：首回合获得 5 点格挡。携灯：首回合第一次直接攻击多造成 3 点伤害。先读意图再出牌。",
+          "openingModifiers": {
+            "keep-lamp": {
+              "route": "keep-lamp",
+              "type": "block-first-turn",
+              "amount": 5
+            },
+            "carry-lamp": {
+              "route": "carry-lamp",
+              "type": "first-attack-damage",
+              "amount": 3
+            }
+          },
           "encounterId": "bridge-guardian",
           "victoryNodeId": "bridge.crossed",
           "rescueNodeId": "bridge.assisted"
@@ -52,23 +254,125 @@
           "type": "dialogue",
           "speaker": "旅伴",
           "title": "桥后的灯影",
-          "text": "迷雾散开时，旅伴替你把暖灯重新举高。你们没有猜中答案，而是真的把词从记忆里找了回来。",
-          "nextNodeId": "camp.letter"
+          "text": "迷雾散开时，桥栏上的第三截绳子还系着瑟琳留下的红结。你们没有猜中答案，而是真的把词从记忆里找了回来。",
+          "nextNodeId": "camp.return-kept"
         },
         {
           "nodeId": "bridge.assisted",
           "type": "camp",
           "speaker": "旅伴",
           "title": "溪桥救援",
-          "text": "你被带回安全的路边。旅伴没有责怪，只把水袋递给你，又把这次没想起来的词认真地圈了一遍。",
-          "nextNodeId": "camp.fire"
+          "text": "你被带回安全的路边。莉娅没有责怪，只把水袋递给你，又把桥栏上没踩稳的地方一一圈进地图。",
+          "nextNodeId": "camp.return-carried"
+        },
+        {
+          "nodeId": "camp.return-kept",
+          "type": "camp",
+          "speaker": "瑟琳",
+          "portraitCharacterId": "serin",
+          "title": "营火 · 有人替桥栏写了注脚",
+          "sceneId": "camp-fire",
+          "text": "对岸有一点灯火晃了三下。莉娅终于松开一直抓着的窗钥匙。",
+          "lines": [
+            {
+              "lineId": "c1-camp-kept-001",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "对岸有一点灯火晃了三下。那不是桥雾，是窗边还亮着的灯。但瑟琳一直盯着桥上那圈红系绳留下的影子。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right",
+                "light": "campfire"
+              }
+            },
+            {
+              "lineId": "c1-camp-kept-002",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "去年我回来时，也是先看见这扇窗。今晚有人也能顺着它找到路，就够了。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right",
+                "light": "campfire"
+              }
+            },
+            {
+              "lineId": "c1-camp-kept-003",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "我把系绳的解结画在这里。下次拉断之前，我们至少知道该往哪边松手。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right",
+                "prop": "red-string"
+              }
+            }
+          ],
+          "nextNodeId": "camp.letter"
+        },
+        {
+          "nodeId": "camp.return-carried",
+          "type": "camp",
+          "speaker": "莉娅",
+          "portraitCharacterId": "lia",
+          "title": "营火 · 粉笔箭头",
+          "sceneId": "camp-fire",
+          "text": "归途中，粉笔箭头旁多了一行小字：“看见了，明早替你擦。”瑟琳主动把这句话抄到地图背面。",
+          "lines": [
+            {
+              "lineId": "c1-camp-carried-001",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "归途中，粉笔箭头旁多了一行小字：“看见了，明早替你擦。”我先以为是雾写的。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right",
+                "light": "campfire"
+              }
+            },
+            {
+              "lineId": "c1-camp-carried-002",
+              "speaker": "serin",
+              "portraitCharacterId": "serin",
+              "text": "我抄在地图背面了。不是让你记住箭头，是记住有人看见我们提着灯过去了。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "serin",
+                "lia": "left",
+                "serin": "right",
+                "light": "campfire"
+              }
+            },
+            {
+              "lineId": "c1-camp-carried-003",
+              "speaker": "lia",
+              "portraitCharacterId": "lia",
+              "text": "那明早我们一起擦。擦完再画一盏小灯，就画在这句话旁边。",
+              "stage": {
+                "sceneId": "camp-fire",
+                "focus": "lia",
+                "lia": "left",
+                "serin": "right",
+                "light": "campfire"
+              }
+            }
+          ],
+          "nextNodeId": "camp.letter"
         },
         {
           "nodeId": "camp.letter",
           "type": "dialogue",
           "speaker": "旅伴",
           "title": "伙伴的对话",
-          "text": "“你把 promise 和 guardian 都写对了。”旅伴靠在你身边，“明天再看见这座桥时，我们会记得今晚的火光。”",
+          "text": "莉娅把今天的词一条条写进笔记。瑟琳在地图背面补上桥栏的断绳，也补上今晚你们怎样把灯留给下一个人。",
           "nextNodeId": "camp.fire"
         },
         {
@@ -76,10 +380,10 @@
           "type": "camp",
           "speaker": "旅伴",
           "title": "营火",
-          "text": "暖灯挂在树梢，营火把第一章的路标照得清清楚楚。你们把今天的词一条条收进旅途笔记。",
+          "text": "营火把第一章的路标照得清清楚楚。你们把今天的词一条条收进旅途笔记。",
           "recollectionId": "first-camp",
           "recollectionTitle": "第一章的营火",
-          "recollectionText": "暖灯与营火一起照亮第一章的路标。",
+          "recollectionText": "你们在溪桥之后回到营火，把今晚的选择和词语一起收进旅记。",
           "nextNodeId": "chapter1.end"
         },
         {

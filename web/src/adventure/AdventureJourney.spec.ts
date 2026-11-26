@@ -370,4 +370,118 @@ describe('AdventureJourney', () => {
     );
     expect(root.textContent).toContain('诺拉');
   });
+
+  it('plays authored window dialogue in sequence and only shows choices at the last line', async () => {
+    const choose = vi.fn();
+    const root = mountJourney(run({
+      currentNode: {
+        nodeId: 'inn.arrival',
+        chapterId: 'chapter-1',
+        type: 'choice',
+        title: '暖灯旅店',
+        speaker: '',
+        text: '旧版纯文本。',
+        sceneId: 'inn-warm-lantern',
+        lines: [
+          {
+            lineId: 'c1-inn-001',
+            speaker: 'narration',
+            text: '铜铃响了三下。',
+          },
+          {
+            lineId: 'c1-lia-001',
+            speaker: 'lia',
+            portraitCharacterId: 'lia',
+            text: '去年我走丢的时候，只看得见这一扇窗。',
+            stage: { lia: 'right', light: 'window-lamp' },
+          },
+          {
+            lineId: 'c1-serin-001',
+            speaker: 'serin',
+            portraitCharacterId: 'serin',
+            text: '第三截绳子，拉一下就断。',
+            stage: { lia: 'right', serin: 'left', prop: 'red-string' },
+          },
+        ],
+        choices: [
+          { choiceId: 'keep-lamp', label: '把灯留在窗边' },
+          { choiceId: 'carry-lamp', label: '提灯同行' },
+        ],
+      },
+    }), { onChoose: choose });
+    await nextTick();
+
+    expect(root.querySelector('[data-testid="bridge-battle"]')).toBeNull();
+    expect(root.textContent).toContain('铜铃响了三下');
+    expect(root.querySelector('.choice-list')).toBeNull();
+    expect(root.querySelector('.cast-lia')).not.toBeNull();
+    expect(root.querySelector('.cast-serin')).not.toBeNull();
+
+    const advance = [...root.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('继续'))!;
+    advance.click();
+    await nextTick();
+    expect(root.querySelector('[data-line-id="c1-lia-001"]')).not.toBeNull();
+    expect(root.textContent).toContain('只看得见这一扇窗');
+    const secondAdvance = [...root.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('继续'))!;
+    secondAdvance.click();
+    await nextTick();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+    }));
+    expect(root.querySelector('[data-line-id="c1-serin-001"]')).not.toBeNull();
+    expect(root.textContent).toContain('第三截绳子');
+    expect(root.querySelector('.red-string')).not.toBeNull();
+    expect(root.querySelector('.choice-list')).not.toBeNull();
+    buttonByText(root, '把灯留在窗边').click();
+    expect(choose).toHaveBeenCalledWith('keep-lamp');
+  });
+  it('replays the authored script one line at a time and shows the real two-character cast', async () => {
+    const choose = vi.fn();
+    const root = mountJourney(run({
+      currentNode: {
+        nodeId: 'inn.arrival',
+        chapterId: 'chapter-1',
+        type: 'choice',
+        title: '暖灯旅店',
+        speaker: '',
+        text: '旧版纯文本。',
+        sceneId: 'inn-warm-lantern',
+        lines: [
+          {
+            lineId: 'c1-inn-001',
+            speaker: 'narration',
+            text: '打烊后的旅店只剩炭火噼啪。窗外的雾里响起铜铃，一下，两下，三下。',
+            stage: {  sceneId: 'inn-warm-lantern', light: 'window-bell' },
+          },
+          {
+            lineId: 'c1-window-001',
+            speaker: 'lia',
+            portraitCharacterId: 'lia',
+            text: '去年我走丢的时候，从桥上只看得见这一扇窗。',
+            stage: { sceneId: 'inn-warm-lantern', lia: 'right', serin: 'far-right' },
+          },
+          {
+            lineId: 'c1-window-002',
+            speaker: 'serin',
+            portraitCharacterId: 'serin',
+            text: '我下午摸过桥栏。第三截绳子，拉一下就断。',
+            stage: { sceneId: 'inn-warm-lantern', lia: 'right', serin: 'left', prop: 'red-string' },
+          },
+        ],
+        choices: [
+          { choiceId: 'keep-lamp', label: '把灯留在窗边' },
+          { choiceId: 'carry-lamp', label: '提灯同行' },
+        ],
+      },
+    }), { onChoose: choose });
+    await nextTick();
+    expect(root.textContent).toContain('打烊后的旅店只剩炭火噼啪');
+    expect(root.querySelector('.cast-lia')).not.toBeNull();
+    expect(root.querySelector('.cast-serin')).not.toBeNull();
+    expect(root.querySelector('.choice-list')).toBeNull();
+  });
 });

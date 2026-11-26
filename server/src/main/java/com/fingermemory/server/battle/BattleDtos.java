@@ -19,7 +19,8 @@ public final class BattleDtos {
             @NotBlank @Size(max = 128) String companionKey,
             Long seed,
             Boolean shuffle,
-            List<@NotBlank @Size(max = 64) String> deck) {
+            List<@NotBlank @Size(max = 64) String> deck,
+            List<RouteModifier> routeModifiers) {
 
         public CreateBattleRequest(
                 String battleId,
@@ -37,6 +38,7 @@ public final class BattleDtos {
                     companionKey,
                     seed,
                     shuffle,
+                    null,
                     null);
         }
     }
@@ -70,5 +72,10 @@ public final class BattleDtos {
             ObjectNode battle,
             List<ObjectNode> events,
             long stateVersion) {
+    }
+
+    public record RouteModifier(
+            String type,
+            int amount) {
     }
 }

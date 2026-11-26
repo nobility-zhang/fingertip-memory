@@ -77,6 +77,63 @@ class AdventurePackageReaderTest {
                 .containsExactly("encounter.windmill-post-warden.resolved");
     }
 
+    @Test
+    void readsDialogueStageCuesAndOpeningRouteModifiers() throws Exception {
+        write("manifest.json", """
+                {"schemaVersion":1,"namespace":"fm.demo","bookId":"warm-lantern",
+                 "contentVersion":"4.0.0","title":"暖灯与失语之森",
+                 "engineRange":{"minInclusive":"0.3.0","maxExclusive":"0.4.0"},
+                 "entryNodeId":"inn.arrival","seriesId":"warm-lantern",
+                 "capabilities":["card-battle-v1"],"requires":[]}
+                """);
+        write("story.json", """
+                {"chapters":[{"chapterId":"chapter-1","title":"暖灯与失语之森",
+                  "nodes":[
+                    {"nodeId":"inn.arrival","type":"choice","title":"暖灯旅店",
+                     "sceneId":"inn-warm-lantern",
+                     "lines":[
+                       {"lineId":"c1-window-002","speaker":"serin",
+                        "portraitCharacterId":"serin",
+                        "text":"第三截绳子，拉一下就断。",
+                        "stage":{"sceneId":"inn-warm-lantern","lia":"right",
+                                         "serin":"left","prop":"red-string"}}],
+                     "choices":[{"choiceId":"keep-lamp","label":"把灯留在窗边",
+                                "targetNodeId":"bridge.guardian"}]},
+                    {"nodeId":"bridge.guardian","type":"encounter",
+                     "title":"雾中溪桥","text":"桥雾聚成守卫。",
+                     "sceneId":"bridge-guardian",
+                     "encounterId":"bridge-guardian",
+                     "victoryNodeId":"bridge.guardian",
+                     "rescueNodeId":"bridge.guardian",
+                     "openingModifiers":{
+                       "keep-lamp":{"route":"keep-lamp",
+                                    "type":"block-first-turn","amount":5}}}
+                  ]}]}
+                """);
+        write(
+                "vocabulary.tsv",
+                "wordKey\tterm\tmeaning\tacceptedAnswers\thints\n"
+                        + "lantern\tlantern\t提灯\t\"[\"\"lantern\"\"]\"\t\"[]\"\n");
+        write("cards.json", "{\"cards\":[]}");
+        write("encounters.json", """
+                {"encounters":[{"encounterId":"bridge-guardian",
+                  "battleRulesVersion":"card-battle-v1","rewardCardIds":[]}]}
+                """);
+        write("characters.json", "{\"characters\":[]}");
+
+        AdventurePackageReader.AdventurePackage content =
+                new AdventurePackageReader(new ObjectMapper()).read(packageRoot);
+
+        AdventurePackageReader.AdventureLine line = content.nodes()
+                .get("inn.arrival").lines().get(0);
+        assertThat(line.lineId()).isEqualTo("c1-window-002");
+        assertThat(line.serin()).isEqualTo("left");
+        assertThat(line.prop()).isEqualTo("red-string");
+        assertThat(content.nodes().get("bridge.guardian")
+                .openingModifiers().get("keep-lamp").type())
+                .isEqualTo("block-first-turn");
+    }
+
     private void write(String name, String value) throws Exception {
         Files.writeString(
                 packageRoot.resolve(name),

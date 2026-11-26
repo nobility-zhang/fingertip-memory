@@ -6,6 +6,7 @@ import com.fingermemory.server.battle.BattleDtos.CreateBattleRequest;
 import com.fingermemory.server.battle.BattleDtos.EndTurnRequest;
 import com.fingermemory.server.battle.BattleDtos.LearningClaimRequest;
 import com.fingermemory.server.battle.BattleDtos.PlayCardRequest;
+import com.fingermemory.server.battle.BattleDtos.RouteModifier;
 import com.fingermemory.server.battle.BattleEngine.CompanionSkillDefinition;
 import com.fingermemory.server.common.ApiException;
 import com.fingermemory.server.common.JsonSupport;
@@ -69,7 +70,7 @@ public class BattleService {
             String ownerId,
             String actionId,
             CreateBattleRequest request) {
-        return createInternal(ownerId, actionId, request, null);
+        return createInternal(ownerId, actionId, request, null, List.of());
     }
 
     @Transactional
@@ -77,15 +78,22 @@ public class BattleService {
             String ownerId,
             String actionId,
             CreateBattleRequest request,
-            CompanionSkillDefinition companionSkill) {
-        return createInternal(ownerId, actionId, request, companionSkill);
+            CompanionSkillDefinition companionSkill,
+            List<RouteModifier> routeModifiers) {
+        return createInternal(
+                ownerId,
+                actionId,
+                request,
+                companionSkill,
+                routeModifiers);
     }
 
     private BattleEnvelope createInternal(
             String ownerId,
             String actionId,
             CreateBattleRequest request,
-            CompanionSkillDefinition companionSkill) {
+            CompanionSkillDefinition companionSkill,
+            List<RouteModifier> routeModifiers) {
         validateActionId(actionId);
         LockedUserData locked = userDataStore.lock(ownerId);
         String fingerprint = fingerprint("create", request);
@@ -111,7 +119,15 @@ public class BattleService {
                     request.seed(),
                     !Boolean.FALSE.equals(request.shuffle()),
                     request.deck(),
-                    companionSkill));
+                    companionSkill,
+                    routeModifiers == null || routeModifiers.isEmpty()
+                            ? List.<BattleEngine.RouteModifierDefinition>of()
+                            : routeModifiers.stream()
+                                    .map(modifier ->
+                                            new BattleEngine.RouteModifierDefinition(
+                                                    modifier.type(),
+                                                    modifier.amount()))
+                                    .toList()));
         } catch (BattleEngine.BattleRuleException exception) {
             throw ruleViolation(exception);
         }
