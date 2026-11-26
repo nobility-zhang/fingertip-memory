@@ -7,6 +7,7 @@ Fingertip Memory 的长期文档按产品、架构、接口、开发、运维和
 | 你想了解什么 | 阅读入口 |
 | --- | --- |
 | 产品怎么玩、角色与英语学习如何结合 | [产品设计](product/overview.md) |
+| 第一章如何改成可玩的视觉小说与卡牌战 | [溪桥之夜样片](product/bridge-night.md) |
 | 角色素材、服装、布局、音效和快捷键 | [视觉与交互](product/experience.md) |
 | 当前系统由什么组成、功能放在哪里 | [架构概览](architecture/overview.md) |
 | 数据模型、账号隔离、正式评分与事务 | [学习与数据一致性](architecture/learning.md) |
