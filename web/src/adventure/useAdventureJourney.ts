@@ -16,6 +16,7 @@ type AdventureApi = Pick<
   | 'startAdventure'
   | 'getAdventure'
   | 'upgradeAdventure'
+  | 'replayAdventure'
   | 'startAdventureEncounter'
   | 'actAdventure'
 >;
@@ -46,6 +47,7 @@ export interface AdventureJourney {
     reduceMotion: boolean;
   }): Promise<boolean>;
   upgrade(runId: string, installationId: string): Promise<boolean>;
+  replay(runId: string): Promise<boolean>;
   resume(runId: string): Promise<boolean>;
   refresh(): Promise<void>;
   setSession(session: SessionEnvelope): void;
@@ -75,6 +77,7 @@ export function useAdventureJourney({
   let generation = 0;
   let pendingStart: PendingRequest | undefined;
   let pendingUpgrade: PendingRequest | undefined;
+  let pendingReplay: PendingRequest | undefined;
   let pendingEncounter: PendingRequest | undefined;
   let pendingAction: PendingRequest | undefined;
 
@@ -170,6 +173,52 @@ export function useAdventureJourney({
       await loadSession(requestGeneration, result.run.sessionId);
       pendingUpgrade = undefined;
       notice.value = `旧存档已安全开启 v${result.run.contentVersion} 的新章节。`;
+      return true;
+    } catch (cause) {
+      if (requestGeneration === generation) {
+        error.value = describeError(cause);
+      }
+      return false;
+    } finally {
+      if (requestGeneration === generation) {
+        busy.value = false;
+      }
+    }
+  }
+
+  async function replay(runId: string): Promise<boolean> {
+    const current = run.value;
+    if (current === undefined) {
+      return false;
+    }
+    const requestGeneration = ++generation;
+    busy.value = true;
+    error.value = null;
+    notice.value = null;
+    const signature = [
+      'replay',
+      runId,
+      current.runVersion,
+      current.companionKey,
+    ].join(':');
+    pendingReplay = reusableAction(pendingReplay, signature);
+    try {
+      const result = await api().replayAdventure(
+        runId,
+        pendingReplay.actionId,
+        {
+          companionKey: current.companionKey,
+          expectedVersion: current.runVersion,
+        },
+      );
+      if (requestGeneration !== generation) {
+        return false;
+      }
+      run.value = result.run;
+      session.value = undefined;
+      await loadSession(requestGeneration, result.run.sessionId);
+      pendingReplay = undefined;
+      notice.value = '已新开一局。上一局的结局和学习记录保持不变。';
       return true;
     } catch (cause) {
       if (requestGeneration === generation) {
@@ -401,6 +450,7 @@ export function useAdventureJourney({
     notice.value = null;
     pendingStart = undefined;
     pendingUpgrade = undefined;
+    pendingReplay = undefined;
     pendingEncounter = undefined;
     pendingAction = undefined;
   }
@@ -419,6 +469,7 @@ export function useAdventureJourney({
     notice,
     start,
     upgrade,
+    replay,
     resume,
     refresh,
     setSession,

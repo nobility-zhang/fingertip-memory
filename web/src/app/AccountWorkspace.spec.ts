@@ -145,6 +145,7 @@ describe('AccountWorkspace', () => {
       createGmSandbox: vi.fn(),
       executeGmSandboxCommand: vi.fn(),
       upgradeAdventure: vi.fn(),
+      replayAdventure: vi.fn(),
     };
 
     const root = document.createElement('div');
@@ -344,6 +345,7 @@ describe('AccountWorkspace', () => {
       createGmSandbox: vi.fn(),
       executeGmSandboxCommand: vi.fn(),
       upgradeAdventure: vi.fn(),
+      replayAdventure: vi.fn(),
     } as AccountClient;
     const root = document.createElement('div');
     document.body.append(root);
@@ -566,6 +568,7 @@ describe('AccountWorkspace', () => {
       createGmSandbox: vi.fn(),
       executeGmSandboxCommand: vi.fn(),
       upgradeAdventure: vi.fn(),
+      replayAdventure: vi.fn(),
     } as AccountClient;
     const root = document.createElement('div');
     document.body.append(root);

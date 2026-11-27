@@ -117,6 +117,7 @@ const {
   notice: adventureNotice,
   start: startAdventureRecord,
   upgrade: upgradeAdventureRecord,
+  replay: replayAdventureRecord,
   resume: resumeAdventureRecord,
   setSession: setAdventureSession,
   choose: chooseAdventure,
@@ -290,6 +291,16 @@ async function resumeAdventure(runId: string): Promise<void> {
   if (resumed) {
     helpOpen.value = false;
     phase.value = 'adventure';
+    scrollPageToTop();
+  }
+}
+
+async function replayAdventure(): Promise<void> {
+  if (adventureBusy.value || adventureRun.value === undefined) {
+    return;
+  }
+  const replayed = await replayAdventureRecord(adventureRun.value.id);
+  if (replayed) {
     scrollPageToTop();
   }
 }
@@ -579,7 +590,7 @@ onBeforeUnmount(() => {
       :companion="selectedCompanion"
       :companion-options="allCompanions"
       :loading="adventureLoading"
-      :busy="adventureBusy"
+      :busy="adventureBusy || adventureLoading"
       :error="adventureError"
       :notice="adventureNotice"
       :enable-audio="true"
@@ -591,6 +602,7 @@ onBeforeUnmount(() => {
       @claim-reward="claimAdventureReward"
       @select-companion="selectAdventureCompanion"
       @complete="completeAdventureChapter"
+      @replay="replayAdventure"
       @exit="leaveAdventureToLobby"
       @session-changed="setAdventureSession"
     />

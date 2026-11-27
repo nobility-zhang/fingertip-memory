@@ -201,6 +201,7 @@ function baseApi(): AccountClient {
     listCompanionDefinitions: vi.fn(async () => []),
     listAdventureCompletions: vi.fn(async () => []),
     upgradeAdventure: vi.fn(),
+    replayAdventure: vi.fn(),
     listAdventureRecollections: vi.fn(async () => []),
     previewContentPackage: vi.fn(),
     installContentPackage: vi.fn(),

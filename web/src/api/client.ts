@@ -504,6 +504,27 @@ export class AccountApi implements AccountClient {
     );
   }
 
+  async replayAdventure(
+    runId: string,
+    idempotencyKey: string,
+    input: {
+      companionKey: string;
+      expectedVersion: number;
+    },
+  ): Promise<AdventureStartResult> {
+    return this.transport.request<AdventureStartResult>(
+      `/adventures/${encodeURIComponent(runId)}/replay`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(input),
+      },
+    );
+  }
+
   async listUnlockedCompanions(): Promise<string[]> {
     return this.transport.request<string[]>(
       '/adventures/companions',

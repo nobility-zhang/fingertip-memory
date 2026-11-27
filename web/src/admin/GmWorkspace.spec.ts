@@ -101,6 +101,7 @@ function baseApi(loadCurrentUser: () => Promise<UserView | null>): AccountClient
     createGmSandbox: vi.fn(),
     executeGmSandboxCommand: vi.fn(),
     upgradeAdventure: vi.fn(),
+    replayAdventure: vi.fn(),
   };
 }
 

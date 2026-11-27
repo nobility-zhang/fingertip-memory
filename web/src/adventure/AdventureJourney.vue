@@ -70,6 +70,7 @@ const emit = defineEmits<{
   'claim-reward': [choiceId: string];
   'select-companion': [companionKey: CompanionId];
   exit: [];
+  replay: [];
   'session-changed': [session: SessionEnvelope];
 }>();
 
@@ -155,7 +156,8 @@ const expressionFor = (
   _companion: CompanionProfile,
   speaking: boolean,
 ): CompanionExpression => {
-  if (props.run.status === 'completed') {
+  if (props.run.status === 'completed'
+      || props.run.status === 'replayed') {
     return 'relief';
   }
   if (node.value.type === 'choice') {
@@ -367,6 +369,15 @@ onBeforeUnmount(() => {
         回到旅店
         <ArrowRight :size="18" aria-hidden="true" />
       </button>
+      <button
+        type="button"
+        class="journey-primary journey-replay"
+        :disabled="busy"
+        @click="emit('replay')"
+      >
+        从窗边重开一局 · 上一局结局保留
+        <ArrowRight :size="18" aria-hidden="true" />
+      </button>
     </div>
 
     <template v-else>
@@ -532,6 +543,17 @@ onBeforeUnmount(() => {
               完成当前章节
               <Sparkles :size="18" aria-hidden="true" />
             </button>
+            <button
+              type="button"
+              class="journey-replay"
+              :disabled="busy"
+              @click="emit('replay')"
+            >
+              从窗边重开一局 · 保留已完成的章节与学习记录
+            </button>
+            <p class="replay-note">
+              新一局会从旅店窗边重新开始，上一局的结局和学习记录不会被改写。
+            </p>
           </div>
 
           <div
@@ -1231,6 +1253,25 @@ onBeforeUnmount(() => {
   background: #d1ab5c;
   color: #201d19;
   font-weight: 700;
+}
+
+.journey-replay {
+  width: fit-content;
+  min-height: 40px;
+  border: 1px solid rgb(234 205 145 / 48%);
+  border-radius: 5px;
+  padding: 8px 13px;
+  background: rgb(22 18 18 / 52%);
+  color: #f3dfb7;
+  cursor: pointer;
+}
+
+.replay-note {
+  max-width: 38rem;
+  margin: 0;
+  color: #b9ad98;
+  font-size: 0.72rem;
+  line-height: 1.55;
 }
 
 .journey-companion {

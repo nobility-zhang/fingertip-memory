@@ -783,6 +783,186 @@ public class AdventureService {
         return response;
     }
 
+    @Transactional
+    public AdventureDtos.StartResult replay(
+            String ownerId,
+            String runId,
+            String actionId,
+            AdventureDtos.ReplayRequest request) {
+        validateActionId(actionId);
+        AdventureRunRow previous = adventureMapper.findForUpdate(ownerId, runId);
+        if (previous == null) {
+            throw notFound();
+        }
+        String fingerprint = fingerprint(
+                "replay",
+                runId,
+                request.companionKey(),
+                request.expectedVersion());
+        requireEpoch(ownerId, previous);
+        AdventureReceiptRow receipt =
+                adventureMapper.findReceipt(
+                        ownerId,
+                        runId,
+                        previous.dataEpoch(),
+                        actionId);
+        if (receipt != null) {
+            if (!fingerprint.equals(receipt.requestFingerprint())) {
+                throw conflict(
+                        "ADVENTURE_IDEMPOTENCY_CONFLICT",
+                        "同一幂等键不能用于不同冒险重玩请求");
+            }
+            return objectMapper.readValue(
+                    receipt.responseJson(),
+                    AdventureDtos.StartResult.class);
+        }
+        String replayedRunId = UUID.nameUUIDFromBytes(
+                ("adventure-replay:" + ownerId + ":"
+                        + previous.id() + ":" + actionId)
+                        .getBytes(StandardCharsets.UTF_8))
+                .toString();
+        AdventureReceiptRow replayedReceipt =
+                adventureMapper.findReceipt(
+                        ownerId,
+                        replayedRunId,
+                        previous.dataEpoch(),
+                        actionId);
+        if (replayedReceipt != null) {
+            if (!fingerprint.equals(replayedReceipt.requestFingerprint())) {
+                throw conflict(
+                        "ADVENTURE_IDEMPOTENCY_CONFLICT",
+                        "同一幂等键不能用于不同冒险重玩请求");
+            }
+            return objectMapper.readValue(
+                    replayedReceipt.responseJson(),
+                    AdventureDtos.StartResult.class);
+        }
+        if (request.expectedVersion() != previous.runVersion()) {
+            throw versionConflict();
+        }
+        requireSafeReplayCheckpoint(ownerId, previous);
+        AdventureRunRow archived = new AdventureRunRow(
+                previous.ownerId(),
+                previous.id(),
+                previous.dataEpoch(),
+                previous.installationId(),
+                previous.namespaceId(),
+                previous.bookId(),
+                previous.contentVersion(),
+                previous.contentHash(),
+                previous.entryNodeId(),
+                previous.currentNodeId(),
+                previous.sessionId(),
+                previous.companionKey(),
+                "replayed",
+                null,
+                previous.sourceCompletionId(),
+                previous.runVersion() + 1,
+                previous.flagsJson(),
+                previous.deckJson(),
+                null,
+                previous.createdAtMs(),
+                previous.updatedAtMs());
+        if (adventureMapper.updateRun(
+                archived,
+                ownerId,
+                runId,
+                previous.runVersion()) != 1) {
+            throw versionConflict();
+        }
+        ContentPackageService.InstalledPackage installed =
+                contentPackageService.installedPackage(
+                        ownerId,
+                        previous.installationId());
+        AdventurePackageReader.AdventurePackage content =
+                packageReader.read(installed.root());
+        requireCompanionAvailable(ownerId, request.companionKey(), content);
+        String sessionId = sessionImporter.importWordsAndCreateSession(
+                ownerId,
+                installed.installation(),
+                content,
+                false);
+        long now = clock.instant().toEpochMilli();
+        AdventureRunRow replayed = new AdventureRunRow(
+                previous.ownerId(),
+                replayedRunId,
+                previous.dataEpoch(),
+                previous.installationId(),
+                previous.namespaceId(),
+                previous.bookId(),
+                previous.contentVersion(),
+                previous.contentHash(),
+                previous.entryNodeId(),
+                previous.entryNodeId(),
+                sessionId,
+                request.companionKey(),
+                "active",
+                previous.installationId(),
+                null,
+                0,
+                "{}",
+                objectMapper.writeValueAsString(
+                        BattleDeckCatalog.teachingDeck()),
+                null,
+                now,
+                now);
+        adventureMapper.insertRun(replayed);
+        applyNodeProgress(
+                ownerId,
+                replayed,
+                requireNode(content, replayed.currentNodeId()),
+                now);
+        AdventureDtos.StartResult response = new AdventureDtos.StartResult(
+                "created",
+                toView(replayed, installed, content));
+        adventureMapper.insertEvent(
+                ownerId,
+                replayed.id(),
+                replayed.runVersion(),
+                "adventure-replayed",
+                replayed.currentNodeId(),
+                objectMapper.writeValueAsString(Map.of(
+                        "companionKey", request.companionKey(),
+                        "previousRunId", previous.id())),
+                now);
+        adventureMapper.insertReceipt(new AdventureReceiptRow(
+                ownerId,
+                replayed.id(),
+                previous.dataEpoch(),
+                actionId,
+                fingerprint,
+                objectMapper.writeValueAsString(response),
+                replayed.runVersion(),
+                now));
+        return response;
+    }
+
+    private void requireSafeReplayCheckpoint(
+            String ownerId,
+            AdventureRunRow previous) {
+        AdventureRunRow active =
+                adventureMapper.findActive(ownerId, previous.installationId());
+        if (active != null && !previous.id().equals(active.id())
+                && "active".equals(active.status())) {
+            throw conflict(
+                    "ADVENTURE_REPLAY_ACTIVE_CONFLICT",
+                    "该版本已有正在进行的冒险，请先回到旅店继续或完成它");
+        }
+        ContentPackageService.InstalledPackage installed =
+                contentPackageService.installedPackage(
+                        ownerId,
+                        previous.installationId());
+        AdventurePackageReader.AdventureNode current =
+                requireNode(
+                        packageReader.read(installed.root()),
+                        previous.currentNodeId());
+        if (!"chapter-end".equals(current.type())) {
+            throw conflict(
+                    "ADVENTURE_REPLAY_UNSAFE_CHECKPOINT",
+                    "只有章节结束或全书完成的冒险可以重玩另一条路线");
+        }
+    }
+
     public List<String> listUnlockedCompanions(String ownerId) {
         List<String> unlocked = new ArrayList<>(List.of("lia", "serin"));
         for (String characterKey : progressMapper.listUnlockedCharacters(ownerId)) {

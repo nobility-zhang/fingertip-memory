@@ -78,6 +78,20 @@ public class AdventureController {
                 request);
     }
 
+    @PostMapping("/{runId}/replay")
+    public AdventureDtos.StartResult replay(
+            Authentication authentication,
+            @PathVariable String runId,
+            @RequestHeader("Idempotency-Key") String actionId,
+            @Valid @RequestBody AdventureDtos.ReplayRequest request) {
+        FmUserPrincipal principal = CurrentUser.require(authentication);
+        return adventureService.replay(
+                principal.id(),
+                runId,
+                actionId,
+                request);
+    }
+
     @GetMapping("/companions")
     public List<String> companions(Authentication authentication) {
         FmUserPrincipal principal = CurrentUser.require(authentication);

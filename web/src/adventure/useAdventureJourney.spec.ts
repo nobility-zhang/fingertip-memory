@@ -81,6 +81,7 @@ function api(): Pick<
   | 'startAdventure'
   | 'getAdventure'
   | 'upgradeAdventure'
+  | 'replayAdventure'
   | 'startAdventureEncounter'
   | 'actAdventure'
 > {
@@ -91,6 +92,10 @@ function api(): Pick<
     upgradeAdventure: vi.fn(async () => ({
       outcome: 'upgraded' as const,
       run: run({ runVersion: 1 }),
+    })),
+    replayAdventure: vi.fn(async () => ({
+      outcome: 'created' as const,
+      run: run({ runVersion: 0, status: 'active', flags: {} }),
     })),
     startAdventureEncounter: vi.fn(async () => ({
       outcome: 'started' as const,
@@ -287,6 +292,43 @@ describe('useAdventureJourney', () => {
     );
     expect(journey.run.value?.contentVersion).toBe('1.1.0');
     expect(journey.notice.value).toContain('安全开启');
+  });
+
+  it('starts a fresh run from the completed run without rewriting its ending', async () => {
+    const client = api();
+    const completed = run({
+      status: 'completed',
+      runVersion: 9,
+      companionKey: 'serin',
+    });
+    vi.mocked(client.replayAdventure).mockResolvedValueOnce({
+      outcome: 'created',
+      run: run({
+        id: 'run-replay',
+        runVersion: 0,
+        companionKey: 'serin',
+        status: 'active',
+      }),
+    });
+    const journey = useAdventureJourney({
+      api: () => client,
+      describeError: () => '请求失败',
+      createActionId: () => 'replay-action',
+    });
+    journey.run.value = completed;
+
+    await expect(journey.replay('completed-run')).resolves.toBe(true);
+
+    expect(client.replayAdventure).toHaveBeenCalledWith(
+      'completed-run',
+      'replay-action',
+      {
+        companionKey: 'serin',
+        expectedVersion: 9,
+      },
+    );
+    expect(journey.run.value?.id).toBe('run-replay');
+    expect(journey.notice.value).toContain('上一局');
   });
 
   it('claims a fixed reward and changes companion only at a camp', async () => {

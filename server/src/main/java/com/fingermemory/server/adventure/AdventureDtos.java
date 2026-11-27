@@ -23,6 +23,11 @@ public final class AdventureDtos {
             @NotBlank @Size(max = 36) String installationId) {
     }
 
+    public record ReplayRequest(
+            @NotBlank @Size(max = 128) String companionKey,
+            @Min(0) long expectedVersion) {
+    }
+
     public record ActionRequest(
             @Min(0) long expectedVersion,
             @NotBlank

@@ -99,6 +99,7 @@ describe('AdventureJourney', () => {
   it('moves through camp and completes from the chapter-end checkpoint', async () => {
     const advance = vi.fn();
     const complete = vi.fn();
+    const replay = vi.fn();
     const root = mountJourney(run({
       currentNode: {
         nodeId: 'camp.fire',
@@ -132,10 +133,12 @@ describe('AdventureJourney', () => {
         text: '第一段旅途已经写入存档。',
         choices: [],
       },
-    }), { onComplete: complete });
+    }), { onComplete: complete, onReplay: replay });
     await nextTick();
     buttonByText(ending, '完成当前章节').click();
     expect(complete).toHaveBeenCalledOnce();
+    buttonByText(ending, '从窗边重开一局').click();
+    expect(replay).toHaveBeenCalledOnce();
   });
 
   it('uses dedicated chapter scene art outside the inn', async () => {

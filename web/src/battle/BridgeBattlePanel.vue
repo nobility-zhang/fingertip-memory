@@ -32,6 +32,10 @@ import type { AdventureBattleTheme } from '../adventure/sceneCatalog';
 import type { GameSoundKey } from '../game-runtime/soundCatalog';
 import BattleShortcutHelp from './BattleShortcutHelp.vue';
 import { CARD_DEFINITIONS } from './cards';
+import {
+  battleFeedbackSteps,
+  type BattleFeedbackKind,
+} from './feedback';
 import { resolveBattlePresentationMode } from './presentation';
 import { battleSoundCues } from './soundEvents';
 import {
@@ -122,6 +126,12 @@ const shortcutHelpOpen = ref(false);
 const shortcutPreferences = ref(loadBattleShortcutPreferences());
 const resumeButton = ref<HTMLButtonElement>();
 const systemReducedMotion = ref(false);
+const feedback = ref<BattleFeedbackKind>('none');
+const feedbackBlock = ref(0);
+const feedbackHit = ref(0);
+const feedbackEnemyBlock = ref(0);
+const feedbackPulse = ref(0);
+let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
 const lastShortcutInput = ref<{
   key: string;
   context: BattleShortcutContext;
@@ -329,6 +339,46 @@ function playBattleEvents(
   for (const cue of battleSoundCues(events, prefix)) {
     playBattleSound(cue.soundKey, cue.eventId, cue.volumeScale);
   }
+}
+
+function scheduleFeedback(
+  events: ReadonlyArray<Record<string, unknown>>,
+  before: BattleStateView | undefined,
+  after: BattleStateView,
+): void {
+  if (presentationMode.value !== 'animated' || before === undefined) {
+    return;
+  }
+  const steps = battleFeedbackSteps(events, {
+    hp: before.party.hp,
+    block: before.party.block,
+    enemyHp: before.enemies[0]?.hp ?? 0,
+    enemyBlocked: before.enemies[0]?.block ?? 0,
+  }, {
+    hp: after.party.hp,
+    block: after.party.block,
+    enemyHp: after.enemies[0]?.hp ?? 0,
+    enemyBlocked: after.enemies[0]?.block ?? 0,
+  });
+  const step = steps[0];
+  if (step === undefined) {
+    return;
+  }
+  feedback.value = step.kind;
+  feedbackBlock.value = step.blocked ?? 0;
+  feedbackHit.value = step.hpFrom !== undefined && step.hpTo !== undefined
+    ? Math.max(0, step.hpFrom - step.hpTo)
+    : 0;
+  feedbackPulse.value += 1;
+  if (feedbackTimer !== undefined) {
+    clearTimeout(feedbackTimer);
+  }
+  feedbackTimer = setTimeout(() => {
+    feedback.value = 'none';
+    feedbackBlock.value = 0;
+    feedbackHit.value = 0;
+    feedbackEnemyBlock.value = 0;
+  }, step.durationMs);
 }
 
 async function startBattle(): Promise<void> {
@@ -573,6 +623,7 @@ async function playCard(
   notice.value = null;
   try {
     const actionId = newId();
+    const before = battle.value?.battle;
     const updated = await props.api.playBattleCard({
       battleId: current.battle.battleId,
       actionId,
@@ -584,6 +635,7 @@ async function playCard(
     selectedCard.value = undefined;
     selectedTargetIndex.value = 0;
     playBattleEvents(updated.events, `card:${actionId}`);
+    scheduleFeedback(updated.events, before, updated.battle);
     notice.value = '战术牌已结算。';
     focusCurrentContext();
   } catch (cause) {
@@ -648,6 +700,7 @@ async function endTurn(): Promise<void> {
   notice.value = null;
   try {
     const actionId = newId();
+    const before = battle.value?.battle;
     const updated = await props.api.endBattleTurn({
       battleId: current.battle.battleId,
       actionId,
@@ -659,6 +712,7 @@ async function endTurn(): Promise<void> {
     selectedCard.value = undefined;
     selectedTargetIndex.value = 0;
     playBattleEvents(updated.events, `turn:${actionId}`);
+    scheduleFeedback(updated.events, before, updated.battle);
     if (
       updated.battle.phase === 'learning'
       && updated.battle.learningTask !== null
@@ -902,6 +956,10 @@ onBeforeUnmount(() => {
     :data-presentation-mode="presentationMode"
     :data-shortcut-context="shortcutContext"
     :data-battle-paused="battlePaused"
+    :data-feedback="feedback"
+    :data-feedback-hit="feedbackHit"
+    :data-feedback-block="feedbackBlock"
+    :data-feedback-pulse="feedbackPulse"
     :data-end-turn-shortcut="shortcutPreferences.endTurn"
     :data-last-shortcut-input="JSON.stringify(lastShortcutInput)"
     @keydown="handleBattleKeydown"
@@ -1009,12 +1067,36 @@ onBeforeUnmount(() => {
           <div class="bridge-line">
             <span></span><span></span><span></span><span></span>
           </div>
-          <div class="enemy-figure" :aria-label="enemyName">
+          <div
+            class="enemy-figure"
+            :class="{
+              'feedback-strike': feedback === 'strike',
+              'feedback-guard': feedback === 'guard' && feedbackBlock > 0,
+            }"
+            :aria-label="enemyName"
+          >
             <span class="enemy-eye"></span>
+            <span
+              v-if="feedback === 'strike'"
+              class="hit-spark"
+              aria-hidden="true"
+            >
+              {{ feedbackHit > 0 ? `-${feedbackHit}` : '被挡' }}
+            </span>
+            <span
+              v-if="feedback === 'guard' && feedbackBlock > 0"
+              class="block-spark"
+              aria-hidden="true"
+            >
+              格挡 {{ feedbackBlock }}
+            </span>
             <strong>{{ enemyName }}</strong>
             <small>{{ battle.battle.encounterId }}</small>
           </div>
-          <div class="companion-figure">
+          <div
+            class="companion-figure"
+            :class="{ 'feedback-guard': feedback === 'guard' || feedback === 'heal' }"
+          >
             <CompanionPortrait
               :companion="companion"
               :expression="companionExpression"
@@ -1437,6 +1519,72 @@ onBeforeUnmount(() => {
   align-self: start;
   color: #9fb8a7;
   font-size: 0.6rem;
+}
+
+.hit-spark,
+.block-spark {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  z-index: 3;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hit-spark {
+  border: 1px solid rgb(255 214 151 / 68%);
+  background: rgb(91 30 25 / 92%);
+  color: #ffd7a1;
+  box-shadow: 0 0 24px rgb(255 161 92 / 42%);
+}
+
+.block-spark {
+  border: 1px solid rgb(205 231 214 / 60%);
+  background: rgb(25 54 51 / 92%);
+  color: #d8f2e1;
+}
+
+.enemy-figure.feedback-strike {
+  animation: enemy-hit 280ms ease-out both;
+}
+
+.companion-figure.feedback-guard {
+  animation: guard-bump 280ms ease-out both;
+}
+
+@keyframes enemy-hit {
+  0% {
+    transform: translateX(-50%) scale(1);
+  }
+
+  28% {
+    transform: translateX(-50%) scale(1.06) translateY(-4px);
+    filter: brightness(1.35);
+  }
+
+  100% {
+    transform: translateX(-50%) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes guard-bump {
+  0% {
+    transform: translateY(0);
+  }
+
+  35% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .companion-figure {

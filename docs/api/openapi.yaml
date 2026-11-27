@@ -1109,7 +1109,7 @@ components:
           maxLength: 128
         status:
           type: string
-          enum: [active, completed]
+          enum: [active, completed, replayed]
         runVersion:
           type: integer
           minimum: 0
@@ -1317,6 +1317,17 @@ components:
           enum: [upgraded]
         run:
           $ref: '#/components/schemas/AdventureRun'
+    AdventureReplay:
+      type: object
+      additionalProperties: false
+      required: [companionKey, expectedVersion]
+      properties:
+        companionKey:
+          type: string
+          maxLength: 128
+        expectedVersion:
+          type: integer
+          minimum: 0
     ContentRequirement:
       type: object
       additionalProperties: false
@@ -3530,6 +3541,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdventureUpgradeResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /adventures/{runId}/replay:
+    post:
+      summary: 从已完成结局新开一局，保留旧结局和学习记录
+      x-implementation-status: implemented
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AdventureRunId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdventureReplay'
+      responses:
+        '200':
+          description: 新 run 已从窗口创建，旧 run 的完成回执不变
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdventureStartResult'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':

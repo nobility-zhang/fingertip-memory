@@ -389,7 +389,7 @@ export interface AdventureRunView {
   title: string;
   seriesId: string;
   companionKey: string;
-  status: 'active' | 'completed';
+  status: 'active' | 'completed' | 'replayed';
   runVersion: number;
   sessionId: string;
   battleId?: string;
@@ -950,6 +950,14 @@ export interface AccountClient {
     idempotencyKey: string,
     installationId: string,
   ): Promise<AdventureUpgradeResult>;
+  replayAdventure(
+    runId: string,
+    idempotencyKey: string,
+    input: {
+      companionKey: string;
+      expectedVersion: number;
+    },
+  ): Promise<AdventureStartResult>;
   listUnlockedCompanions(): Promise<string[]>;
   listCompanionDefinitions(): Promise<AdventureCharacterView[]>;
   listAdventureRecollections(
